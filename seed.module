@@ -1,0 +1,122 @@
+<?php
+
+/**
+ * @file
+ * Provides seeding functionality for modules.
+ */
+
+
+/**
+ * Get a seed.
+ */
+function seed_get($tid = NULL) {
+  $result = db_select('seed', 's')
+    ->fields('s')
+    ->condition('s.status', 1)
+    ->orderBy('s.timestamp')
+    ->execute();
+
+  foreach ( $result as $seed ) {
+    dpm($seed);
+  }
+}
+
+/**
+ * Load a seed.
+ */
+function seed_load($sid) {
+  $seeds = drupal_static(__FUNCTION__, array());
+
+  if ( !isset($seeds[$sid]) ) {
+    $seeds[$sid] = db_select('seed', 's')
+      ->fields('s')
+      ->condition('s.sid', $sid)
+      ->execute()
+      ->fetchObject();
+  }
+
+  return $seeds[$sid];
+}
+
+/**
+ * Saves a seed.
+ */
+function seed_save($seed) {
+  $seed->is_new = empty($seed->sid);
+
+  if ( !$seed->is_new ) {
+    $status = drupal_write_record('seed', $seed, 'sid');
+  }
+  else {
+    $status = drupal_write_record('seed', $seed);
+  }
+}
+
+/**
+ * Delete a seed.
+ */
+function seed_delete($sid) {
+  $seed = seed_load($sid);
+
+  $transaction = db_transaction();
+  try {
+    db_delete('seed')
+      ->condition('sid', $sid)
+      ->execute();
+
+    cache_clear_all();
+    seed_static_reset();
+
+    return SAVED_DELETED;
+  }
+  catch ( Exception $e ) {
+    $transaction->rollback();
+    watchlog_exception('seed', $e);
+    throw $e;
+  }
+}
+
+/**
+ * Clear all static cache variables for seeds.
+ */
+function seed_static_reset($ids = NULL) {
+  drupal_static_reset('seed_load');
+}
+
+/**
+ * Return the Vocabulary ID (vid) used by seed for categorization.
+ */
+function seed_get_vid() {
+  if ( !module_exists('taxonomy') ) {
+    return FALSE;
+  }
+
+  $vid = variable_get(SEED_CATEGORY_DEFAULT_VID, '');
+  if ( empty($vid) || !taxonomy_vocabulary_load($vid) ) {
+    $vid = db_query("SELECT vid FROM {taxonomy_vocabulary} WHERE module = 'seed'")->fetchField();
+    if ( !$vid ) {
+      drupal_set_message(t('Created Seed vocabulary'));
+
+      $vocab = (object) array(
+        'name' => SEED_CATEGORY_NAME,
+        'description' => t('Automatically created by the seed module.'),
+        'machine_name' => 'seed',
+        'multiple' => FALSE,
+        'required' => FALSE,
+        'hierarchy' => TRUE,
+        'relations' => FALSE,
+        'module' => 'seed',
+      );
+
+      taxonomy_vocabulary_save($vocab);
+      $vid = $vocab->vid;
+      variable_set(SEED_CATEGORY_DEFAULT_VID, $vid);
+    }
+  }
+
+  if ( !is_numeric($vid) ) {
+    watchdog('seed', 'seed module was unable to select or create a vocabulary.', array(), WATCHDOG_ERROR);
+  }
+
+  return $vid;
+}
