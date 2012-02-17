@@ -167,7 +167,7 @@ function seed_replant() {
 /**
  * Generate seeds.
  */
-function seed_generate($number_of_seeds, $tid = NULL) {
+function seed_generate($number_of_seeds = 10, $tid = NULL) {
   seed_clear_all();
 
   for ( $i = 1; $i <= $number_of_seeds; $i++ ) {
