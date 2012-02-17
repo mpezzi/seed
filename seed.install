@@ -25,16 +25,41 @@ function seed_schema() {
           'not null' => TRUE,
           'default' => 0,
         ),
-        'timestamp' => array(
+        'uid' => array(
+          'description' => 'User ID currently holding seed',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'name' => array(
+          'description' => 'Name',
+          'type' => 'varchar',
+          'length' => 128,
+        ),
+        'seed_timestamp' => array(
           'description' => 'Seed Timestamp',
           'type' => 'int',
           'not null' => TRUE,
           'default' => 0,
         ),
-        'value' => array(
-          'description' => 'Value',
-          'type' => 'varchar',
-          'length' => 128,
+        'hold_timestamp' => array(
+          'description' => 'Hold Timestamp',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'used_timestamp' => array(
+          'description' => 'Used Timestamp',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'used' => array(
+          'description' => 'Used',
+          'type' => 'int',
+          'size' => 'tiny',
+          'not null' => TRUE,
+          'default' => 0,
         ),
         'status' => array(
           'description' => 'Status',
@@ -47,32 +72,7 @@ function seed_schema() {
       'primary key' =>  array('sid'),
       'indexes' => array(
         'tid' => array('tid'),
-      ),
-    ),
-    'seed_history' => array(
-      'description' => 'Hold seed history information',
-      'fields' => array(
-        'sid' => array(
-          'description' => 'Seed ID',
-          'type' => 'int',
-          'not null' => TRUE,
-        ),
-        'uid' => array(
-          'description' => 'User ID',
-          'type' => 'int',
-          'not null' => TRUE,
-        ),
-        'updated' => array(
-          'description' => 'Updated Timestamp',
-          'type' => 'int',
-          'not null' => TRUE,
-          'default' => 0,
-        ),
-      ),
-      'primary key' => array('sid'),
-      'indexes' => array(
         'uid' => array('uid'),
-        'updated' => array('updated'),
       ),
     ),
   );

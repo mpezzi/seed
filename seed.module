@@ -5,35 +5,261 @@
  * Provides seeding functionality for modules.
  */
 
+/**
+ * Default seed category name.
+ */
+define('SEED_CATEGORY_NAME', 'Seeds');
 
 /**
- * Get a seed.
+ * Default seed category vocabulary id.
  */
-function seed_get($tid = NULL) {
-  $result = db_select('seed', 's')
-    ->fields('s')
-    ->condition('s.status', 1)
-    ->orderBy('s.timestamp')
+define('SEED_CATEGORY_DEFAULT_VID', 'seed_category_default_vid');
+
+/**
+ * Seed replant time.
+ */
+define('SEED_REPLANT_TIME', 60 * 5);
+
+
+/**
+ * Implements hook_permission().
+ */
+function seed_permission() {
+  return array(
+    'use seed test block' => array(
+      'title' => t('Use seed test block'),
+      'description' => t('View the seed testing block'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_block_info().
+ */
+function seed_block_info() {
+  return array(
+    'seed_test' => array(
+      'info' => t('Seed Tester'),
+      'cache' => DRUPAL_NO_CACHE,
+    ),
+  );
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function seed_block_view($delta = '') {
+  if ( $delta == 'seed_test' ) {
+    if ( user_access('use seed test block') ) {
+      return array(
+        'subject' => t('Seed Tester'),
+        'content' => drupal_get_form('seed_test_form'),
+      );
+    }
+  }
+}
+
+/**
+ * Seed testing form.
+ */
+function seed_test_form($form, &$form_state) {
+  $seed = seed_find();
+
+  $form['sid'] = array(
+    '#type' => 'hidden',
+    '#value' => isset($seed->sid) ? $seed->sid : 0,
+  );
+
+  $form['submit'] = array(
+    '#disabled' => !isset($seed->sid),
+    '#type' => 'submit',
+    '#value' => isset($seed->sid) ? t('Seed @seedname Available', array('@seedname' => $seed->name)) : t('No seed available'),
+  );
+
+  return $form;
+}
+
+/**
+ * Seed testing form submit callback.
+ */
+function seed_test_form_submit(&$form, &$form_state) {
+  if ( $form_state['values']['sid'] !== 0 ) {
+    seed_use($form_state['values']['sid']);
+    $seed = seed_load($form_state['values']['sid']);
+    drupal_set_message(t('Successfully used seed @seedname', array('@seedname' => $seed->name)));
+  }
+}
+
+/**
+ * Clear all seeds.
+ */
+function seed_clear_all() {
+  db_truncate('seed')->execute();
+  drupal_set_message(t('Cleared all seeds'));
+}
+
+/**
+ * Use a seed and prevent it from being found in the future.
+ *
+ * @param $sid
+ *   A seed id.
+ * @param $uid
+ *   A user id.
+ * @return
+ *   A seed object or FALSE if unable to use.
+ */
+function seed_use($sid, $uid = NULL) {
+  global $user;
+
+  if ( is_null($uid) ) {
+    $account = $user;
+  }
+  else {
+    $account = user_load($uid);
+  }
+
+  $query = db_select('seed', 's')
+    ->fields('s', array('sid'))
+    ->condition('s.sid', $sid)
+    ->condition('s.uid', $account->uid)
+    ->condition('s.used', 0)
+    ->condition('s.status', 0)
+    ->range(0, 1);
+
+  $found_sid = $query->execute()->fetchField();
+
+  // Mark seed as expired.
+  if ( is_numeric($found_sid) ) {
+    $seed = seed_load($found_sid);
+
+    $seed->uid = $account->uid;
+    $seed->used = TRUE;
+    $seed->used_timestamp = time();
+
+    seed_save($seed);
+
+    watchdog('seed', 'Successfully used seed @seedname for @username', array('@seedname' => $seed->name, '@username' => $account->name), WATCHDOG_NOTICE, l('user', 'user/' . $account->uid));
+
+    return $seed;
+  }
+
+  // Something went wrong.
+  watchdog('seed', 'unable to use seed @sid for user @username', array('@sid' => $sid, '@username' => $account->name), WATCHDOG_CRITICAL, l('user', 'user/' . $account->uid));
+
+  return FALSE;
+}
+
+/**
+ * Replant seeds that have not expired.
+ */
+function seed_replant() {
+  $seeds_replanted = db_update('seed')
+    ->fields(array('status' => 1, 'uid' => 0, 'hold_timestamp' => 0))
+    ->condition('hold_timestamp', time() - SEED_REPLANT_TIME, '<')
+    ->condition('used', 0)
+    ->condition('status', 0)
     ->execute();
 
-  foreach ( $result as $seed ) {
-    dpm($seed);
+  if ( $seeds_replanted > 0 ) {
+    watchdog('seed', 'Replanted @seeds_replanted seeds held for more than @replant_time seconds.', array('@seeds_replanted' => $seeds_replanted, '@replant_time' => SEED_REPLANT_TIME), WATCHDOG_NOTICE);
   }
+}
+
+/**
+ * Generate seeds.
+ */
+function seed_generate($number_of_seeds, $tid = NULL) {
+  seed_clear_all();
+
+  for ( $i = 1; $i <= $number_of_seeds; $i++ ) {
+    $seed = (object) array(
+      'tid' => $tid,
+      'seed_timestamp' => time() + ( $i * 60 ),
+      'name' => 'generated' . $i,
+      'status' => 1,
+    );
+
+    seed_save($seed);
+  }
+
+  drupal_set_message(t('Successfully generated @number_of_seeds seeds.', array('@number_of_seeds' => $number_of_seeds)));
+}
+
+/**
+ * Find a seed.
+ */
+function seed_find($tid = NULL, $expire = TRUE) {
+  global $user;
+
+  $account = $user;
+
+  // Revive used seeds that have been used within a time period but haven't expired.
+  if ( variable_get('seed_replant', TRUE) ) {
+    seed_replant();
+  }
+
+  // Look for seed currently in use by the currently logged in user.
+  $sid = db_select('seed', 's')
+    ->fields('s', array('sid'))
+    ->condition('s.uid', $account->uid)
+    ->condition('s.used', 0)
+    ->condition('s.status', 0)
+    ->range(0, 1)
+    ->execute()
+    ->fetchField();
+
+  // If the user doesn't have a seed, look for a new seed.
+  if ( $sid === FALSE ) {
+    $query = db_select('seed', 's')
+      ->fields('s', array('sid'))
+      ->condition('s.status', 1)
+      ->condition('s.seed_timestamp', time(), '<')
+      ->orderBy('s.seed_timestamp')
+      ->range(0, 1);
+
+    if ( !is_null($tid) ) {
+      $query->condition('s.tid', $tid);
+    }
+
+    $sid = $query->execute()->fetchField();
+  }
+
+  if ( $sid !== FALSE ) {
+    $seed = seed_load($sid);
+
+    if ( $seed->uid == 0 ) {
+      watchdog('seed', 'Seed @seedname was found by @username.', array('@seedname' => $seed->name, '@username' => $account->name), WATCHDOG_NOTICE, l('user', 'user/' . $account->uid));
+    }
+
+    $seed->hold_timestamp = time();
+    $seed->uid = $account->uid;
+
+    // Mark seed and unavailable.
+    if ( $expire ) {
+      $seed->status = 0;
+    }
+
+    seed_save($seed);
+
+    return $seed;
+  }
+
+  return FALSE;
 }
 
 /**
  * Load a seed.
  */
 function seed_load($sid) {
-  $seeds = drupal_static(__FUNCTION__, array());
+  //$seeds = drupal_static(__FUNCTION__, array());
 
-  if ( !isset($seeds[$sid]) ) {
+  //if ( !isset($seeds[$sid]) ) {
     $seeds[$sid] = db_select('seed', 's')
       ->fields('s')
       ->condition('s.sid', $sid)
       ->execute()
       ->fetchObject();
-  }
+  //}
 
   return $seeds[$sid];
 }
@@ -115,7 +341,7 @@ function seed_get_vid() {
   }
 
   if ( !is_numeric($vid) ) {
-    watchdog('seed', 'seed module was unable to select or create a vocabulary.', array(), WATCHDOG_ERROR);
+    watchdog('seed', 'Seed module was unable to select or create a vocabulary.', array(), WATCHDOG_ERROR);
   }
 
   return $vid;
