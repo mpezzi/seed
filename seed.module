@@ -280,24 +280,26 @@ function seed_save($seed) {
  * Delete a seed.
  */
 function seed_delete($sid) {
-  $seed = seed_load($sid);
+  if ( $seed = seed_load($sid) ) {
+    $transaction = db_transaction();
+    try {
+      db_delete('seed')
+        ->condition('sid', $seed->sid)
+        ->execute();
 
-  $transaction = db_transaction();
-  try {
-    db_delete('seed')
-      ->condition('sid', $sid)
-      ->execute();
+      cache_clear_all();
+      seed_static_reset();
 
-    cache_clear_all();
-    seed_static_reset();
-
-    return SAVED_DELETED;
+      return SAVED_DELETED;
+    }
+    catch ( Exception $e ) {
+      $transaction->rollback();
+      watchlog_exception('seed', $e);
+      throw $e;
+    }
   }
-  catch ( Exception $e ) {
-    $transaction->rollback();
-    watchlog_exception('seed', $e);
-    throw $e;
-  }
+
+  return FALSE;
 }
 
 /**
