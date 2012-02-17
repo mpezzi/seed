@@ -186,6 +186,13 @@ function seed_generate($number_of_seeds = 10, $tid = NULL) {
 
 /**
  * Find a seed.
+ *
+ * @param $tid
+ *   A term id.
+ * @param $hold
+ *   Whether to hold the seed for the user.
+ * @return
+ *   A seed object, or FALSE if the seed is not found.
  */
 function seed_find($tid = NULL, $hold = TRUE) {
   global $user;

@@ -1,0 +1,7 @@
+name = Seed Service
+description = Exposes seed functionality via a service
+package = Seed
+core = 7.x
+
+dependencies[] = seed
+dependencies[] = services

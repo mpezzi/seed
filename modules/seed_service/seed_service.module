@@ -1,0 +1,66 @@
+<?php
+
+/**
+ * @file
+ * Exposes seed functionality via a service.
+ */
+
+
+/**
+ * Implements hook_services_resources().
+ */
+function seed_service_services_resources() {
+  return array(
+    'seed' => array(
+      'retrieve' => array(
+        'file' => array('file' => 'inc', 'module' => 'seed_service'),
+        'callback' => 'seed_service_retrieve',
+        'access callback' => 'seed_service_access',
+        'access arguments' => array('retrieve'),
+        'access arguments append' => TRUE,
+        'args' => array(
+          array(
+            'name' => 'sid',
+            'type' => 'int',
+            'description' => 'The Seed ID.',
+            'source' => array('path' => 0),
+          ),
+        ),
+      ),
+      'index' => array(
+        'file' => array('file' => 'inc', 'module' => 'seed_service'),
+        'callback' => 'seed_service_index',
+        'access callback' => 'seed_service_access',
+        'access arguments' => array('index'),
+        'access arguments append' => TRUE,
+        'args' => array(
+          array(
+            'type' => 'int',
+            'name' => 'tid',
+            'description' => 'The Category Id.',
+            'optional' => TRUE,
+            'source' => array('param' => 'tid'),
+          ),
+        ),
+      ),
+      'actions' => array(
+        'find' => array(
+          'file' => array('file' => 'inc', 'module' => 'seed_service'),
+          'callback' => 'seed_service_find',
+          'access callback' => 'seed_service_access',
+          'access arguments' => array('fid'),
+          'access arguments append' => TRUE,
+          'args' => array(
+            array(
+              'type' => 'int',
+              'name' => 'tid',
+              'description' => 'The Category Id.',
+              'optional' => TRUE,
+              'source' => array('param' => 'tid'),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+}
