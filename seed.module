@@ -187,7 +187,7 @@ function seed_generate($number_of_seeds = 10, $tid = NULL) {
 /**
  * Find a seed.
  */
-function seed_find($tid = NULL, $expire = TRUE) {
+function seed_find($tid = NULL, $hold = TRUE) {
   global $user;
 
   $account = $user;
@@ -226,19 +226,18 @@ function seed_find($tid = NULL, $expire = TRUE) {
   if ( $sid !== FALSE ) {
     $seed = seed_load($sid);
 
-    if ( $seed->uid == 0 ) {
-      watchdog('seed', 'Seed @seedname was found by @username.', array('@seedname' => $seed->name, '@username' => $account->name), WATCHDOG_NOTICE, l('user', 'user/' . $account->uid));
-    }
-
-    $seed->hold_timestamp = time();
-    $seed->uid = $account->uid;
-
     // Mark seed and unavailable.
-    if ( $expire ) {
-      $seed->status = 0;
-    }
+    if ( $hold ) {
+      if ( $seed->uid == 0 ) {
+        watchdog('seed', 'Seed @seedname was found by @username.', array('@seedname' => $seed->name, '@username' => $account->name), WATCHDOG_NOTICE, l('user', 'user/' . $account->uid));
+      }
 
-    seed_save($seed);
+      $seed->hold_timestamp = time();
+      $seed->uid = $account->uid;
+      $seed->status = 0;
+
+      seed_save($seed);
+    }
 
     return $seed;
   }
