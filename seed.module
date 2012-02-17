@@ -84,8 +84,7 @@ function seed_test_form($form, &$form_state) {
  */
 function seed_test_form_submit(&$form, &$form_state) {
   if ( $form_state['values']['sid'] !== 0 ) {
-    seed_use($form_state['values']['sid']);
-    $seed = seed_load($form_state['values']['sid']);
+    $seed = seed_use($form_state['values']['sid']);
     drupal_set_message(t('Successfully used seed @seedname', array('@seedname' => $seed->name)));
   }
 }
