@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Provides seed service resources.
+ * Provides seed resources for services module.
  */
 
 
@@ -77,6 +77,56 @@ function _seed_resource_delete($sid) {
 }
 
 /**
+ * Return an array of optionally paged sids based on a set of criteria.
+ */
+function _seed_resource_index() {
+  $result = db_select('seed', 's')
+    ->fields('s')
+    ->orderBy('seed_timestamp')
+    ->execute();
+
+  $items = array();
+  foreach ( $result as $seed ) {
+    $items[] = $seed;
+  }
+
+  return $items;
+}
+
+/**
+ * Find a seed.
+ *
+ * @param $tid
+ *   (optional) A Category ID.
+ * @param $hold
+ *   Whether to hold the seed for the user.
+ * @return
+ *   A seed object or FALSE.
+ */
+function _seed_resource_find($tid = NULL, $hold = TRUE) {
+  return seed_find($tid, $hold);
+}
+
+/**
+ * Use a seed.
+ *
+ * @param $sid
+ *   A Seed ID.
+ * @return
+ *   A Seed Object or FALSE if unable to use.
+ */
+function _seed_resource_use($sid) {
+  return seed_use($sid);
+}
+
+/**
+ * Replant seeds that have not expired.
+ */
+function _seed_resource_replant() {
+  seed_replant();
+}
+
+/**
  * Determine whether the current user can access a seed resource.
  *
  * @param $op
@@ -86,6 +136,12 @@ function _seed_resource_delete($sid) {
  * @return
  *   Boolean TRUE if the current user has the requested permissions. 
  */
-function _seed_resource_access($op = 'view', $args = array()) {
-  return TRUE;
+function _seed_resource_access($op = 'retrieve', $args = array()) {
+  if ( $op == 'create' || $op == 'retrieve' || $op == 'update' || $op == 'delete' || $op == 'index' ) {
+    return user_access('administer seeds');
+  }
+
+  if ( $op == 'find' || $op == 'use' || $op == 'replant' ) {
+    return user_access('use seeds');
+  }
 }

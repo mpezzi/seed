@@ -85,28 +85,22 @@ function seed_service_services_resources() {
           ),
         ),
       ),
-      /*
       'index' => array(
-        'file' => array('file' => 'inc', 'module' => 'seed_service', 'name' => 'resources/seed_resource'),
+        'help' => 'Lists seeds',
+        'file' => array('type' => 'inc', 'module' => 'seed_service', 'name' => 'resources/seed_resource'),
         'callback' => '_seed_resource_index',
         'access callback' => '_seed_resource_access',
         'access arguments' => array('index'),
         'access arguments append' => TRUE,
         'args' => array(
-          array(
-            'type' => 'int',
-            'name' => 'tid',
-            'description' => 'The Category Id.',
-            'optional' => TRUE,
-            'source' => array('param' => 'tid'),
-          ),
+          
         ),
       ),
       'actions' => array(
         'find' => array(
           'help' => 'Find a seed.',
-          'file' => array('file' => 'inc', 'module' => 'seed_service'),
-          'callback' => 'seed_service_find',
+          'file' => array('type' => 'inc', 'module' => 'seed_service', 'name' => 'resources/seed_resource'),
+          'callback' => '_seed_resource_find',
           'access callback' => '_seed_resource_access',
           'access arguments' => array('find'),
           'access arguments append' => TRUE,
@@ -118,12 +112,20 @@ function seed_service_services_resources() {
               'optional' => TRUE,
               'source' => array('param' => 'tid'),
             ),
+            array(
+              'type' => 'int',
+              'name' => 'hold',
+              'description' => 'Whether to hold the seed for the user.',
+              'optional' => TRUE,
+              'default value' => TRUE,
+              'source' => array('param' => 'hold'),
+            ),
           ),
         ),
         'use' => array(
           'help' => 'Use a seed.',
-          'file' => array('file' => 'inc', 'module' => 'seed_service'),
-          'callback' => 'seed_service_use',
+          'file' => array('type' => 'inc', 'module' => 'seed_service', 'name' => 'resources/seed_resource'),
+          'callback' => '_seed_resource_use',
           'access callback' => '_seed_resource_access',
           'access arguments' => array('use'),
           'access arguments append' => TRUE,
@@ -135,25 +137,17 @@ function seed_service_services_resources() {
               'optional' => FALSE,
               'source' => array('param' => 'sid'),
             ),
-            array(
-              'type' => 'int',
-              'name' => 'uid',
-              'description' => 'The User Id.',
-              'optional' => TRUE,
-              'source' => array('param' => 'uid'),
-            ),
           ),
         ),
         'replant' => array(
           'help' => 'Replant old seeds that have been held.',
-          'file' => array('file' => 'inc', 'module' => 'seed_service'),
-          'callback' => 'seed_service_replant',
+          'file' => array('type' => 'inc', 'module' => 'seed_service', 'name' => 'resources/seed_resource'),
+          'callback' => '_seed_resource_replant',
           'access callback' => '_seed_resource_access',
           'access arguments' => array('replant'),
           'access arguments append' => TRUE,
         ),
       ),
-      */
     ),
   );
 }
