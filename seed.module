@@ -26,6 +26,14 @@ define('SEED_REPLANT_TIME', 60 * 5);
  */
 function seed_permission() {
   return array(
+    'administer seeds' => array(
+      'title' => t('Administer Seeds'),
+      'description' => t('Allows to create, read, update and destory seeds.'),
+    ),
+    'use seeds' => array(
+      'title' => t('Use seeds'),
+      'description' => t('Allows to find and use seeds.'),
+    ),
     'use seed test block' => array(
       'title' => t('Use seed test block'),
       'description' => t('View the seed testing block'),
