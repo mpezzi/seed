@@ -28,7 +28,7 @@ function seed_permission() {
   return array(
     'administer seeds' => array(
       'title' => t('Administer Seeds'),
-      'description' => t('Allows to create, read, update and destory seeds.'),
+      'description' => t('Allows to create, read, update and destroy seeds.'),
     ),
     'use seeds' => array(
       'title' => t('Use seeds'),
