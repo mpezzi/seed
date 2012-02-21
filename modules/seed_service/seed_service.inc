@@ -14,18 +14,6 @@ function seed_service_access($string = NULL) {
 }
 
 /**
- * Sanitize seed results.
- */
-function seed_service_seed_sanitize($seed) {
-  unset($seed->uid);
-  unset($seed->used_timestamp);
-  unset($seed->hold_timestamp);
-  unset($seed->seed_timestamp);
-
-  return $seed;
-}
-
-/**
  * Returns the results of a seed_load() for the specified seed.
  *
  * @param $sid
@@ -36,10 +24,19 @@ function seed_service_seed_sanitize($seed) {
  * @see seed_load()
  */
 function seed_service_retrieve($sid) {
-  $seed = seed_load($sid);
-  $seed = seed_service_seed_sanitize($seed);
+  return $sid;
 
-  return $seed;
+  //$seed = seed_load($sid);
+  //$seed = seed_service_seed_sanitize($seed);
+
+  //return $seed;
+}
+
+/**
+ * Create a new seed based on submitted values.
+ */
+function seed_service_create($seed) {
+  
 }
 
 /**
@@ -58,6 +55,18 @@ function seed_service_index($tid = NULL) {
 function seed_service_find($tid = NULL) {
   $seed = seed_find($tid);
   $seed = seed_service_seed_sanitize($seed);
+
+  return $seed;
+}
+
+/**
+ * Sanitize seed results.
+ */
+function seed_service_seed_sanitize($seed) {
+  unset($seed->uid);
+  unset($seed->used_timestamp);
+  unset($seed->hold_timestamp);
+  unset($seed->seed_timestamp);
 
   return $seed;
 }

@@ -13,24 +13,83 @@ function seed_service_services_resources() {
   return array(
     'seed' => array(
       'retrieve' => array(
-        'file' => array('file' => 'inc', 'module' => 'seed_service'),
-        'callback' => 'seed_service_retrieve',
-        'access callback' => 'seed_service_access',
+        'help' => 'Retrieve a seed',
+        'file' => array('file' => 'inc', 'module' => 'seed_service', 'name' => 'resources/seed_resource'),
+        'callback' => '_seed_resource_retrieve',
+        'access callback' => '_seed_resource_access',
         'access arguments' => array('retrieve'),
         'access arguments append' => TRUE,
         'args' => array(
           array(
             'name' => 'sid',
-            'type' => 'int',
             'description' => 'The Seed ID.',
+            'type' => 'int',
             'source' => array('path' => 0),
           ),
         ),
       ),
+      'create' => array(
+        'help' => 'Create a seed',
+        'file' => array('file' => 'inc', 'module' => 'seed_service', 'name' => 'resources/seed_resource'),
+        'callback' => '_seed_resource_create',
+        'access callback' => '_seed_resource_access',
+        'access arguments' => array('create'),
+        'access arguments append' => TRUE,
+        'args' => array(
+          array(
+            'name' => 'data',
+            'description' => 'The seed object.',
+            'type' => 'array',
+            'optional' => FALSE,
+            'source' => 'data',
+          ),
+        ),
+      ),
+      'update' => array(
+        'help' => 'Update a seed',
+        'file' => array('file' => 'inc', 'module' => 'seed_service', 'name' => 'resources/seed_resource'),
+        'callback' => '_seed_resource_update',
+        'access callback' => '_seed_resource_access',
+        'access arguments' => array('update'),
+        'access arguments append' => TRUE,
+        'args' => array(
+          array(
+            'name' => 'sid',
+            'description' => 'The Seed ID.',
+            'type' => 'int',
+            'optional' => FALSE,
+            'source' => array('path' => 0),
+          ),
+          array(
+            'name' => 'data',
+            'description' => 'The seed object.',
+            'type' => 'array',
+            'optional' => FALSE,
+            'source' => 'data',
+          ),
+        ),
+      ),
+      'delete' => array(
+        'help' => 'Delete a seed',
+        'file' => array('file' => 'inc', 'module' => 'seed_service', 'name' => 'resources/seed_resource'),
+        'callback' => '_seed_resource_delete',
+        'access callback' => '_seed_resource_access',
+        'access arguments' => array('delete'),
+        'access arguments append' => TRUE,
+        'args' => array(
+          array(
+            'name' => 'sid',
+            'description' => 'The Seed ID.',
+            'type' => 'int',
+            'source' => array('path' => 0),
+          ),
+        ),
+      ),
+      /*
       'index' => array(
-        'file' => array('file' => 'inc', 'module' => 'seed_service'),
-        'callback' => 'seed_service_index',
-        'access callback' => 'seed_service_access',
+        'file' => array('file' => 'inc', 'module' => 'seed_service', 'name' => 'resources/seed_resource'),
+        'callback' => '_seed_resource_index',
+        'access callback' => '_seed_resource_access',
         'access arguments' => array('index'),
         'access arguments append' => TRUE,
         'args' => array(
@@ -45,9 +104,10 @@ function seed_service_services_resources() {
       ),
       'actions' => array(
         'find' => array(
+          'help' => 'Find a seed.',
           'file' => array('file' => 'inc', 'module' => 'seed_service'),
           'callback' => 'seed_service_find',
-          'access callback' => 'seed_service_access',
+          'access callback' => '_seed_resource_access',
           'access arguments' => array('find'),
           'access arguments append' => TRUE,
           'args' => array(
@@ -60,7 +120,40 @@ function seed_service_services_resources() {
             ),
           ),
         ),
+        'use' => array(
+          'help' => 'Use a seed.',
+          'file' => array('file' => 'inc', 'module' => 'seed_service'),
+          'callback' => 'seed_service_use',
+          'access callback' => '_seed_resource_access',
+          'access arguments' => array('use'),
+          'access arguments append' => TRUE,
+          'args' => array(
+            array(
+              'type' => 'int',
+              'name' => 'sid',
+              'description' => 'The Seed Id.',
+              'optional' => FALSE,
+              'source' => array('param' => 'sid'),
+            ),
+            array(
+              'type' => 'int',
+              'name' => 'uid',
+              'description' => 'The User Id.',
+              'optional' => TRUE,
+              'source' => array('param' => 'uid'),
+            ),
+          ),
+        ),
+        'replant' => array(
+          'help' => 'Replant old seeds that have been held.',
+          'file' => array('file' => 'inc', 'module' => 'seed_service'),
+          'callback' => 'seed_service_replant',
+          'access callback' => '_seed_resource_access',
+          'access arguments' => array('replant'),
+          'access arguments append' => TRUE,
+        ),
       ),
+      */
     ),
   );
 }
