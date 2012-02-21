@@ -54,15 +54,18 @@ function _seed_resource_create($seed) {
  *   A Seed ID.
  * @param $seed
  *   Object representing the attributes of a seed.
+ * @return
+ *   A Seed Object.
  */
-function _seed_resource_update($sid, $update_values) {
-  if ( $seed = seed_load($sid) ) {
-    $update_values = (object) $update_values;
-    $update_values->sid = $seed->sid;
-    seed_save($update_values);
+function _seed_resource_update($sid, $seed) {
+  if ( seed_load($sid) ) {
+    $seed = (object) $seed;
+    $seed->sid = $sid;
+    seed_save($seed);
+    $seed = seed_load($sid);
   }
 
-  return $update_values;
+  return $seed;
 }
 
 /**
