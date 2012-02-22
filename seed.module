@@ -104,34 +104,6 @@ function seed_clear_all() {
 }
 
 /**
- * Use a held seeds and prevent it from being found in the future.
- *
- * @param $sid
- *   A seed id.
- * @return
- *   A seed object or FALSE if unable to use.
- */
-function seed_use($sid) {
-  // Mark seed as used.
-  if ( $seed = seed_load($sid, TRUE) ) {
-    $seed->used = TRUE;
-    $seed->used_timestamp = time();
-    seed_save($seed);
-
-    $account = user_load($seed->uid);
-
-    watchdog('seed', 'Successfully used seed @seedname for @username', array('@seedname' => $seed->name, '@username' => $account->name), WATCHDOG_NOTICE, l('user', 'user/' . $account->uid));
-
-    return $seed;
-  }
-
-  // Something went wrong.
-  watchdog('seed', 'unable to use seed @sid for user @username', array('@sid' => $sid, '@username' => $account->name), WATCHDOG_CRITICAL, l('user', 'user/' . $account->uid));
-
-  return FALSE;
-}
-
-/**
  * Replant seeds that have not expired.
  */
 function seed_replant() {
@@ -182,6 +154,11 @@ function seed_find($tid = NULL, $hold = TRUE) {
 
   $account = $user;
 
+  // Ensure user account has permission to use seeds.
+  if ( !user_access('use seeds', $account) ) {
+    return FALSE;
+  }
+
   // Revive used seeds that have been used within a time period but haven't expired.
   if ( variable_get('seed_replant', TRUE) ) {
     seed_replant();
@@ -231,6 +208,35 @@ function seed_find($tid = NULL, $hold = TRUE) {
 
     return $seed;
   }
+
+  return FALSE;
+}
+
+/**
+ * Use a held seeds and prevent it from being found in the future.
+ *
+ * @param $sid
+ *   A seed id.
+ * @return
+ *   A seed object or FALSE if unable to use.
+ */
+function seed_use($sid) {
+  if ( $seed = seed_load($sid, TRUE) ) {
+    $account = user_load($seed->uid);
+
+    if ( user_access('use seeds', $account) ) {
+      $seed->used = TRUE;
+      $seed->used_timestamp = time();
+      seed_save($seed);
+
+      watchdog('seed', 'Successfully used seed @seedname for @username', array('@seedname' => $seed->name, '@username' => $account->name), WATCHDOG_NOTICE, l('user', 'user/' . $account->uid));
+
+      return $seed;
+    }
+  }
+
+  // Something went wrong.
+  watchdog('seed', 'unable to use seed @sid for user @username', array('@sid' => $sid, '@username' => $account->name), WATCHDOG_CRITICAL, l('user', 'user/' . $account->uid));
 
   return FALSE;
 }
