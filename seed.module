@@ -57,13 +57,11 @@ function seed_block_info() {
  * Implements hook_block_view().
  */
 function seed_block_view($delta = '') {
-  if ( $delta == 'seed_test' ) {
-    if ( user_access('use seed test block') ) {
-      return array(
-        'subject' => t('Seed Tester'),
-        'content' => drupal_get_form('seed_test_form'),
-      );
-    }
+  if ( $delta == 'seed_test' && user_access('use seed test block') ) {
+    return array(
+      'subject' => t('Seed Tester'),
+      'content' => drupal_get_form('seed_test_form'),
+    );
   }
 }
 
@@ -138,11 +136,9 @@ function seed_use($sid, $uid = NULL) {
   // Mark seed as expired.
   if ( is_numeric($found_sid) ) {
     $seed = seed_load($found_sid);
-
     $seed->uid = $account->uid;
     $seed->used = TRUE;
     $seed->used_timestamp = time();
-
     seed_save($seed);
 
     watchdog('seed', 'Successfully used seed @seedname for @username', array('@seedname' => $seed->name, '@username' => $account->name), WATCHDOG_NOTICE, l('user', 'user/' . $account->uid));
