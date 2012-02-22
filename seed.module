@@ -258,17 +258,36 @@ function seed_find($tid = NULL, $hold = TRUE) {
 
 /**
  * Load a seed.
+ *
+ * @param $sid
+ *   A Seed ID.
+ * @param $is_held
+ *   Only return a seed that is currently being held.
+ * @return
+ *   A Seed Object.
  */
-function seed_load($sid) {
+function seed_load($sid, $is_held = FALSE) {
   //$seeds = drupal_static(__FUNCTION__, array());
-
   //if ( !isset($seeds[$sid]) ) {
-    $seeds[$sid] = db_select('seed', 's')
-      ->fields('s')
-      ->condition('s.sid', $sid)
-      ->execute()
-      ->fetchObject();
+  //  $seeds[$sid] = db_select('seed', 's')
+  //    ->fields('s')
+  //    ->condition('s.sid', $sid)
+  //    ->execute()
+  //    ->fetchObject();
   //}
+
+  $query = db_select('seed', 's')
+    ->fields('s')
+    ->condition('s.sid', $sid);
+
+  // If looking for held seeds, add extra conditions.
+  if ( $is_held ) {
+    $query
+      ->condition('s.used', 0)
+      ->condition('s.status', 0);
+  }
+
+  $seeds[$sid] = $query->execute()->fetchObject();
 
   return $seeds[$sid];
 }
