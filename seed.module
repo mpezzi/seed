@@ -104,42 +104,31 @@ function seed_clear_all() {
 }
 
 /**
- * Use a seed and prevent it from being found in the future.
+ * Use a held seeds and prevent it from being found in the future.
  *
  * @param $sid
  *   A seed id.
- * @param $uid
- *   A user id.
  * @return
  *   A seed object or FALSE if unable to use.
  */
-function seed_use($sid, $uid = NULL) {
-  global $user;
-
-  if ( is_null($uid) ) {
-    $account = $user;
-  }
-  else {
-    $account = user_load($uid);
-  }
-
-  $query = db_select('seed', 's')
+function seed_use($sid) {
+  $held_sid = db_select('seed', 's')
     ->fields('s', array('sid'))
     ->condition('s.sid', $sid)
-    ->condition('s.uid', $account->uid)
     ->condition('s.used', 0)
     ->condition('s.status', 0)
-    ->range(0, 1);
+    ->range(0, 1)
+    ->execute()
+    ->fetchField();
 
-  $found_sid = $query->execute()->fetchField();
-
-  // Mark seed as expired.
-  if ( is_numeric($found_sid) ) {
-    $seed = seed_load($found_sid);
-    $seed->uid = $account->uid;
+  // Mark seed as used.
+  if ( is_numeric($held_sid) ) {
+    $seed = seed_load($held_sid);
     $seed->used = TRUE;
     $seed->used_timestamp = time();
     seed_save($seed);
+
+    $account = user_load($seed->uid);
 
     watchdog('seed', 'Successfully used seed @seedname for @username', array('@seedname' => $seed->name, '@username' => $account->name), WATCHDOG_NOTICE, l('user', 'user/' . $account->uid));
 
