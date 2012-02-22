@@ -112,18 +112,8 @@ function seed_clear_all() {
  *   A seed object or FALSE if unable to use.
  */
 function seed_use($sid) {
-  $held_sid = db_select('seed', 's')
-    ->fields('s', array('sid'))
-    ->condition('s.sid', $sid)
-    ->condition('s.used', 0)
-    ->condition('s.status', 0)
-    ->range(0, 1)
-    ->execute()
-    ->fetchField();
-
   // Mark seed as used.
-  if ( is_numeric($held_sid) ) {
-    $seed = seed_load($held_sid);
+  if ( $seed = seed_load($sid, TRUE) ) {
     $seed->used = TRUE;
     $seed->used_timestamp = time();
     seed_save($seed);
