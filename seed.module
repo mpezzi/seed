@@ -252,15 +252,6 @@ function seed_use($sid) {
  *   A Seed Object.
  */
 function seed_load($sid, $is_held = FALSE) {
-  //$seeds = drupal_static(__FUNCTION__, array());
-  //if ( !isset($seeds[$sid]) ) {
-  //  $seeds[$sid] = db_select('seed', 's')
-  //    ->fields('s')
-  //    ->condition('s.sid', $sid)
-  //    ->execute()
-  //    ->fetchObject();
-  //}
-
   $query = db_select('seed', 's')
     ->fields('s')
     ->condition('s.sid', $sid);
