@@ -1,0 +1,88 @@
+<?php
+
+/**
+ * @file
+ * Provides test classes for seed module.
+ */
+
+
+/**
+ * Seed base test class with various helper functions.
+ */
+class SeedTestCase extends DrupalWebTestCase {
+  
+}
+
+/**
+ * API Tests.
+ */
+class SeedAPITestCase extends SeedTestCase {
+  private $privileged_user;
+  private $authenticated_user;
+
+  /**
+   * Implements getInfo().
+   */
+  function getInfo() {
+    return array(
+      'name' => t('Seed API'),
+      'description' => t('Tests the core API for proper inserts and updates to the database tables'),
+      'group' => t('Seed'),
+    );
+  }
+
+  /**
+   * Implements setUp().
+   */
+  function setUp() {
+    parent::setUp('seed');
+
+    $this->privileged_user = $this->drupalCreateUser(array('administer seeds'));
+    $this->authenticated_user = $this->drupalCreateUser(array('use seeds'));
+    $this->drupalLogin($this->authenticated_user);
+  }
+
+  /**
+   * Returns a seed row as an object directly from the database.
+   *
+   * @param $sid
+   *   A Seed ID.
+   * @return
+   *   A Seed Object.
+   */
+  function getSeed($sid) {
+    return db_select('seed', 's')
+      ->fields('s')
+      ->condition('s.sid', $sid)
+      ->range(0, 1)
+      ->execute()
+      ->fetchObject();
+  }
+
+  /**
+   * Call seed_save() and seed_load().
+   */
+  function testSeedStorage() {
+    $seed = (object) array(
+      'seed_timestamp' => time(),
+      'name' => 'test1',
+      'status' => 1,
+    );
+
+    // Save seed.
+    seed_save($seed);
+
+    // Load seed.
+    $seed = seed_load($seed->sid);
+
+    // Ensure seed object matches that which was saved and loaded using seed_save() and seed_load().
+    $this->assertTrue($seed == $this->getSeed($seed->sid), t('Seed successfully stored in database.'));
+  }
+
+  /**
+   * Call seed_find().
+   */
+  function testSeedFind() {
+    
+  }
+}
