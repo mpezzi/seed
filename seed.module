@@ -122,13 +122,13 @@ function seed_replant() {
 /**
  * Generate seeds.
  */
-function seed_generate($number_of_seeds = 10, $tid = NULL) {
+function seed_generate($number_of_seeds = 10, $interval = 60, $tid = NULL) {
   seed_clear_all();
 
   for ( $i = 1; $i <= $number_of_seeds; $i++ ) {
     $seed = (object) array(
       'tid' => $tid,
-      'seed_timestamp' => time() + ( $i * 60 ),
+      'seed_timestamp' => time() + ( $i * $interval ),
       'name' => 'generated' . $i,
       'status' => 1,
     );
@@ -149,10 +149,12 @@ function seed_generate($number_of_seeds = 10, $tid = NULL) {
  * @return
  *   A seed object, or FALSE if the seed is not found.
  */
-function seed_find($tid = NULL, $hold = TRUE) {
+function seed_find($tid = NULL, $hold = TRUE, $account = NULL) {
   global $user;
 
-  $account = $user;
+  if (is_null($account)){
+    $account = $user;
+  }
 
   // Ensure user account has permission to use seeds.
   if ( !user_access('use seeds', $account) ) {
@@ -221,6 +223,8 @@ function seed_find($tid = NULL, $hold = TRUE) {
  *   A seed object or FALSE if unable to use.
  */
 function seed_use($sid) {
+  global $user;
+
   if ( $seed = seed_load($sid, TRUE) ) {
     $account = user_load($seed->uid);
 
@@ -236,7 +240,7 @@ function seed_use($sid) {
   }
 
   // Something went wrong.
-  watchdog('seed', 'unable to use seed @sid for user @username', array('@sid' => $sid, '@username' => $account->name), WATCHDOG_CRITICAL, l('user', 'user/' . $account->uid));
+  watchdog('seed', 'unable to use seed @sid for user @username', array('@sid' => $sid, '@username' => $user->name), WATCHDOG_CRITICAL, l('user', 'user/' . $user->uid));
 
   return FALSE;
 }
