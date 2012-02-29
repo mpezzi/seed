@@ -10,7 +10,7 @@
  * Seed base test class with various helper functions.
  */
 class SeedTestCase extends DrupalWebTestCase {
-  
+
 }
 
 /**
@@ -39,6 +39,7 @@ class SeedAPITestCase extends SeedTestCase {
 
     $this->privileged_user = $this->drupalCreateUser(array('administer seeds'));
     $this->authenticated_user = $this->drupalCreateUser(array('use seeds'));
+    $this->authenticated_user2 = $this->drupalCreateUser(array('use seeds'));
     $this->drupalLogin($this->authenticated_user);
   }
 
@@ -83,6 +84,52 @@ class SeedAPITestCase extends SeedTestCase {
    * Call seed_find().
    */
   function testSeedFind() {
-    
+    seed_generate(10, 5);
+
+    // user should not be able to get a seed before
+    // seeds have been generated
+    $seed = seed_find();
+    $this->assertFalse($seed, t('Seed not available before time.'));
+
+    sleep(6);
+
+    // user1's should be able to get a seed after
+    // seeds are generated
+    $first_seed_user1 = seed_find();
+    $this->assertTrue($first_seed_user1, t('Seed was found after time.'));
+
+    sleep(6);
+
+    // user2 should be able to find a seed
+    // user2's seed should not be the same as user1's seed
+    $first_seed_user2 = seed_find(NULL, TRUE, $this->authenticated_user2);
+    $this->assertTrue($first_seed_user2, t('Second user found a seed'));
+    $this->assertTrue($first_seed_user1 != $first_seed_user2, t("User1's seed is not the same as User2's seed."));
+
+    sleep(6);
+
+    // user1 should get same seed they previously found
+    $second_seed_user1 = seed_find();
+    unset($first_seed_user1->hold_timestamp, $second_seed_user1->hold_timestamp);
+    $this->assertTrue($first_seed_user1 == $second_seed_user1, t('User holding a seed cannot find another seed.'));
+
+  }
+
+  /**
+   * Call seed_use().
+   */
+  function testSeedUse() {
+    seed_generate(10,5);
+
+    sleep(6);
+
+    // get a seed
+    $seed = seed_find();
+
+    // use seed.
+    // seed's properties should reflect that it has been used
+    $used_seed = seed_use($seed->sid);
+    $this->assertTrue($used_seed->used == TRUE, t('Seed has been marked off as used.'));
+    $this->assertTrue($used_seed->used_timestamp != 0, t("Seed's timestamp must not be zero."));
   }
 }
