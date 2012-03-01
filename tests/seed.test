@@ -64,16 +64,14 @@ class SeedAPITestCase extends SeedTestCase {
    * Call seed_save() and seed_load().
    */
   function testSeedStorage() {
+    // Save and load a seed object, and ensure it matches what's stored in the database.
     $seed = (object) array(
       'seed_timestamp' => time(),
       'name' => 'test1',
       'status' => 1,
     );
 
-    // Save seed.
     seed_save($seed);
-
-    // Load seed.
     $seed = seed_load($seed->sid);
 
     // Ensure seed object matches that which was saved and loaded using seed_save() and seed_load().
@@ -86,50 +84,46 @@ class SeedAPITestCase extends SeedTestCase {
   function testSeedFind() {
     seed_generate(10, 5);
 
-    // user should not be able to get a seed before
-    // seeds have been generated
+    // Generated seeds should not be available yet.
     $seed = seed_find();
-    $this->assertFalse($seed, t('Seed not available before time.'));
+    $this->assertFalse($seed, t('Generated seeds are not initially available.'));
 
-    sleep(6);
+    sleep(6); // Wait 6 seconds for a seed.
 
-    // user1's should be able to get a seed after
-    // seeds are generated
+    // Find first seed for logged in user.
     $first_seed_user1 = seed_find();
-    $this->assertTrue($first_seed_user1, t('Seed was found after time.'));
+    $this->assertTrue($first_seed_user1, t('First user successfully found and held seed.'));
 
-    sleep(6);
+    sleep(6); // Wait 6 seconds for next seed.
 
-    // user2 should be able to find a seed
-    // user2's seed should not be the same as user1's seed
+    // Find second seed for second user and ensure it's not equal to the logged in users seed.
     $first_seed_user2 = seed_find(NULL, TRUE, $this->authenticated_user2);
-    $this->assertTrue($first_seed_user2, t('Second user found a seed'));
-    $this->assertTrue($first_seed_user1 != $first_seed_user2, t("User1's seed is not the same as User2's seed."));
+    $this->assertTrue($first_seed_user2, t('Second user sucessfully found and held a seed.'));
+    $this->assertTrue($first_seed_user1 != $first_seed_user2, t("Users are not holding the same seeds."));
 
-    sleep(6);
+    sleep(6); // Wait 6 seconds for next seed.
 
-    // user1 should get same seed they previously found
+    // First user should received the same held seed they've initial found.
     $second_seed_user1 = seed_find();
+    // The hold timestamp will be different, unset this when comparing the seeds.
     unset($first_seed_user1->hold_timestamp, $second_seed_user1->hold_timestamp);
-    $this->assertTrue($first_seed_user1 == $second_seed_user1, t('User holding a seed cannot find another seed.'));
-
+    $this->assertTrue($first_seed_user1 == $second_seed_user1, t('First user finding a new seed will always find the held seed.'));
   }
 
   /**
    * Call seed_use().
    */
   function testSeedUse() {
-    seed_generate(10,5);
+    seed_generate(10, 5);
 
-    sleep(6);
+    sleep(6); // Wait 6 seconds for seed the be available.
 
-    // get a seed
+    // Find a seed, use it and check properties.
     $seed = seed_find();
-
-    // use seed.
-    // seed's properties should reflect that it has been used
     $used_seed = seed_use($seed->sid);
     $this->assertTrue($used_seed->used == TRUE, t('Seed has been marked off as used.'));
     $this->assertTrue($used_seed->used_timestamp != 0, t("Seed's timestamp must not be zero."));
+
+    // @TODO: Ensure database values match.
   }
 }
