@@ -93,7 +93,7 @@ function seed_service_services_resources() {
         'access arguments' => array('index'),
         'access arguments append' => TRUE,
         'args' => array(
-          
+
         ),
       ),
       'actions' => array(
@@ -119,6 +119,23 @@ function seed_service_services_resources() {
               'optional' => TRUE,
               'default value' => TRUE,
               'source' => array('param' => 'hold'),
+            ),
+          ),
+        ),
+        'drop' => array(
+          'help' => 'Drop a seed.',
+          'file' => array('type' => 'inc', 'module' => 'seed_service', 'name' => 'resources/seed_resource'),
+          'callback' => '_seed_resource_drop',
+          'access callback' => '_seed_resource_access',
+          'access arguments' => array('drop'),
+          'access arguments append' => TRUE,
+          'args' => array(
+            array(
+              'type' => 'int',
+              'name' => 'sid',
+              'description' => 'The Seed Id.',
+              'optional' => FALSE,
+              'source' => array('param' => 'sid'),
             ),
           ),
         ),

@@ -111,6 +111,20 @@ function _seed_resource_find($tid = NULL, $hold = TRUE) {
 }
 
 /**
+ * Drop a seed.
+ *
+ * @param $tid
+ *   (optional) A Category ID.
+ * @param $hold
+ *   Whether to hold the seed for the user.
+ * @return
+ *   A seed object or FALSE.
+ */
+function _seed_resource_drop($sid) {
+  return seed_drop($sid);
+}
+
+/**
  * Use a seed.
  *
  * @param $sid
@@ -137,14 +151,14 @@ function _seed_resource_replant() {
  * @param $args
  *   Resource arguments passed through from the original request.
  * @return
- *   Boolean TRUE if the current user has the requested permissions. 
+ *   Boolean TRUE if the current user has the requested permissions.
  */
 function _seed_resource_access($op = 'retrieve', $args = array()) {
   if ( $op == 'create' || $op == 'retrieve' || $op == 'update' || $op == 'delete' || $op == 'index' ) {
     return user_access('administer seeds');
   }
 
-  if ( $op == 'find' || $op == 'use' || $op == 'replant' ) {
+  if ( $op == 'find' || $op == 'use' || $op == 'drop' && $op == 'replant' ) {
     return user_access('use seeds');
   }
 }
