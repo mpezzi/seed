@@ -152,7 +152,7 @@ function seed_generate($number_of_seeds = 10, $interval = 60, $tid = NULL) {
 function seed_find($tid = NULL, $hold = TRUE, $account = NULL) {
   global $user;
 
-  if (is_null($account)){
+  if ( is_null($account) ) {
     $account = $user;
   }
 
@@ -267,9 +267,7 @@ function seed_load($sid, $is_held = FALSE) {
       ->condition('s.status', 0);
   }
 
-  $seeds[$sid] = $query->execute()->fetchObject();
-
-  return $seeds[$sid];
+  return $query->execute()->fetchObject();
 }
 
 /**
