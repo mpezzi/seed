@@ -215,6 +215,32 @@ function seed_find($tid = NULL, $hold = TRUE, $account = NULL) {
 }
 
 /**
+ * Drop a seed.
+ */
+function seed_drop($sid) {
+  global $user;
+
+  if ( $seed = seed_load($sid, TRUE) ) {
+    $account = user_load($seed->uid);
+
+    $seed->status = 1;
+    $seed->hold_timestamp = 0;
+    $seed->uid = 0;
+
+    seed_save($seed);
+
+    watchdog('seed', 'Seed @seedname was dropped by @username.', array('@seedname' => $seed->name, '@username' => $account->name), WATCHDOG_NOTICE, l('user', 'user/' . $account->uid));
+
+    return $seed;
+  }
+
+  // Something went wrong.
+  watchdog('seed', 'unable to drop seed @sid for user @username', array('@sid' => $sid, '@username' => $user->name), WATCHDOG_CRITICAL, l('user', 'user/' . $user->uid));
+
+  return FALSE;
+}
+
+/**
  * Use a held seeds and prevent it from being found in the future.
  *
  * @param $sid
