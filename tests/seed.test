@@ -125,7 +125,7 @@ class SeedAPITestCase extends SeedTestCase {
     $this->assertTrue($used_seed->used_timestamp != 0, t("Seed's timestamp must not be zero."));
 
     // Ensure database values match.
-    $db_seed = seed_load($used_seed->sid);
+    $db_seed = $this->getSeed($used_seed->sid);
     $this->assertTrue($db_seed->used == TRUE, t('DB value for seed indicates that it was used.'));
     $this->assertTrue($db_seed->used_timestamp != 0, t("DB value for seed's used_timestamp was set to a non-zero value."));
     $this->assertTrue($db_seed->used_timestamp == $used_seed->used_timestamp, t("DB value for the seed's used_timestamp matches the Used seed's used_timestamp."));
@@ -147,7 +147,7 @@ class SeedAPITestCase extends SeedTestCase {
     $this->assertTrue($dropped_seed->uid == 0, t("Seed's uid was reset to zero."));
 
     // Ensure new values were successfully stored in the database.
-    $db_seed = seed_load($dropped_seed->sid);
+    $db_seed = $this->getSeed($dropped_seed->sid);
     $this->assertTrue($db_seed->status == 1, t("DB value for seed's status was set to 1."));
     $this->assertTrue($db_seed->hold_timestamp == 0, t("DB value for seed's hold_timestamp was reset to zero."));
     $this->assertTrue($db_seed->uid == 0, t("DB value for seed's uid was reset to zero."));
