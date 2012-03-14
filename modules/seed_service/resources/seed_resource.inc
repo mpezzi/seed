@@ -158,7 +158,7 @@ function _seed_resource_access($op = 'retrieve', $args = array()) {
     return user_access('administer seeds');
   }
 
-  if ( $op == 'find' || $op == 'use' || $op == 'drop' && $op == 'replant' ) {
+  if ( $op == 'find' || $op == 'use' || $op == 'drop' || $op == 'replant' ) {
     return user_access('use seeds');
   }
 }
