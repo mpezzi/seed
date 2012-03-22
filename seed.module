@@ -20,6 +20,22 @@ define('SEED_CATEGORY_DEFAULT_VID', 'seed_category_default_vid');
  */
 define('SEED_REPLANT_TIME', 60 * 5);
 
+/**
+ * Implements hook_menu().
+ */
+function seed_menu() {
+  return array(
+    'admin/reports/seeds' => array(
+      'title' => 'Seed status',
+      'description' => 'View current seed status',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('seed_list'),
+      'access arguments' => array('administer seeds'),
+      'file' => 'seed.pages.inc',
+      'type' => MENU_NORMAL_ITEM,
+    ),
+  );
+}
 
 /**
  * Implements hook_permission().
