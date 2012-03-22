@@ -29,15 +29,21 @@ function seed_list($form, &$form_state) {
     ->fetchAll();
 
   foreach ( $seeds as $seed ) {
+    if ( $seed->tid && $term = taxonomy_term_load($seed->tid) ) {
+      $seed->term = $term;
+    }
+    if ( $seed->uid && $user = user_load($seed->uid) ) {
+      $seed->user = $user;
+    }
     $rows[] = array(
       $seed->sid,
       isset($seed->term->name) ? $seed->term->name : t('Uncategorized'),
-      $seed->uid,
+      isset($seed->user->name) ? l($seed->user->name, 'user/' . $seed->user->uid) : t('No user.'),
       format_date($seed->seed_timestamp, 'custom', SEED_TIME_FORMAT_LONG),
       $seed->hold_timestamp > 0 ? format_date($seed->hold_timestamp, 'custom', SEED_TIME_FORMAT_LONG) : 0,
       $seed->used_timestamp > 0 ? format_date($seed->used_timestamp, 'custom', SEED_TIME_FORMAT_LONG) : 0,
-      $seed->used ? 'Yes' : 'No',
-      $seed->status,
+      $seed->used ? t('Yes') : t('No'),
+      $seed->status ? t('Available') : t('Not available'),
     );
   }
 
