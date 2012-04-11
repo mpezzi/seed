@@ -25,6 +25,15 @@ define('SEED_REPLANT_TIME', 60 * 5);
  */
 function seed_menu() {
   return array(
+    'admin/config/people/seed' => array(
+      'title' => 'Seeds',
+      'description' => 'Configure seed settings.',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('seed_admin_settings'),
+      'access arguments' => array('administer seeds'),
+      'file' => 'seed.admin.inc',
+      'type' => MENU_NORMAL_ITEM,
+    ),
     'admin/reports/seeds' => array(
       'title' => 'Seed status',
       'description' => 'View current seed status',
@@ -175,6 +184,13 @@ function seed_find($tid = NULL, $hold = TRUE, $account = NULL) {
   // Ensure user account has permission to use seeds.
   if ( !user_access('use seeds', $account) ) {
     return FALSE;
+  }
+
+  // Does the user have a role that is to be ignored?
+  foreach ( variable_get('seed_ignored_roles', array()) as $id ) {
+    if ( $id != 0 && array_key_exists($id, $account->roles) ) {
+      return FALSE;
+    }
   }
 
   // Revive used seeds that have been used within a time period but haven't expired.
