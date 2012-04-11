@@ -275,6 +275,9 @@ function seed_use($sid) {
       $seed->used_timestamp = time();
       seed_save($seed);
 
+      // Invoke hook_seed_use().
+      module_invoke_all('seed_use', $seed);
+
       watchdog('seed', 'Successfully used seed @seedname for @username', array('@seedname' => $seed->name, '@username' => $account->name), WATCHDOG_NOTICE, l('user', 'user/' . $account->uid));
 
       return $seed;
