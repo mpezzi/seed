@@ -255,7 +255,7 @@ function seed_find($tid = NULL, $hold = TRUE, $account = NULL) {
 function seed_drop($sid) {
   global $user;
 
-  if ( $seed = seed_load($sid, TRUE) ) {
+  if ( $seed = seed_load($sid, TRUE) && isset($seed->uid) && $seed->uid != 0 ) {
     $account = user_load($seed->uid);
 
     $seed->status = 1;
@@ -286,7 +286,7 @@ function seed_drop($sid) {
 function seed_use($sid) {
   global $user;
 
-  if ( $seed = seed_load($sid, TRUE) ) {
+  if ( $seed = seed_load($sid, TRUE) && isset($seed->uid) && $seed->uid != 0 ) {
     $account = user_load($seed->uid);
 
     if ( user_access('use seeds', $account) ) {
