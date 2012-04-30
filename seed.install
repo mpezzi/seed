@@ -54,6 +54,11 @@ function seed_schema() {
           'not null' => TRUE,
           'default' => 0,
         ),
+        'used_token' => array(
+          'description' => 'Used Token',
+          'type' => 'varchar',
+          'length' => 32,
+        ),
         'used' => array(
           'description' => 'Used',
           'type' => 'int',
@@ -90,4 +95,17 @@ function seed_uninstall() {
   if ( $vid && function_exists('taxonomy_vocabulary_delete') ) {
     taxonomy_vocabulary_delete($vid);
   }
+}
+
+/**
+ * Add used_token field.
+ */
+function seed_update_7100() {
+  $field = array(
+    'description' => 'Used Token',
+    'type' => 'varchar',
+    'length' => 32,
+  );
+
+  db_add_field('seed', 'used_token', $field);
 }

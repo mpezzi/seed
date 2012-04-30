@@ -19,6 +19,7 @@ function seed_list($form, &$form_state) {
     array('data' => t('Hold Timestamp')),
     array('data' => t('Used Timestamp')),
     array('data' => t('Used')),
+    array('data' => t('Token')),
     array('data' => t('Status')),
   );
 
@@ -43,6 +44,7 @@ function seed_list($form, &$form_state) {
       $seed->hold_timestamp > 0 ? format_date($seed->hold_timestamp, 'custom', SEED_TIME_FORMAT_LONG) : 0,
       $seed->used_timestamp > 0 ? format_date($seed->used_timestamp, 'custom', SEED_TIME_FORMAT_LONG) : 0,
       $seed->used ? t('Yes') : t('No'),
+      $seed->used_token,
       $seed->status ? t('Available') : t('Not available'),
     );
   }

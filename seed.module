@@ -292,6 +292,7 @@ function seed_use($sid) {
     if ( user_access('use seeds', $account) ) {
       $seed->used = TRUE;
       $seed->used_timestamp = time();
+      $seed->used_token = seed_use_token($seed);
       seed_save($seed);
 
       // Invoke hook_seed_use().
@@ -307,6 +308,13 @@ function seed_use($sid) {
   watchdog('seed', 'unable to use seed @sid for user @username', array('@sid' => $sid, '@username' => $user->name), WATCHDOG_CRITICAL, l('user', 'user/' . $user->uid));
 
   return FALSE;
+}
+
+/**
+ * Returns a seed token.
+ */
+function seed_use_token($seed) {
+  return substr(md5($seed->sid . '-' . $seed->uid . '-' . $seed->used_timestamp), 0, 16);
 }
 
 /**

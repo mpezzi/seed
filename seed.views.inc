@@ -112,6 +112,24 @@ function seed_views_data() {
     ),
   );
 
+  $data['seed']['used_token'] = array(
+    'title' => t('Token'),
+    'help' => t('Token'),
+    'field' => array(
+      'handler' => 'views_handler_field',
+      'click sortable' => TRUE,
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_string',
+    ),
+    'argument' => array(
+      'handler' => 'views_handler_argument_string',
+    ),
+  );
+
   $data['seed']['used'] = array(
     'title' => t('Used'),
     'help' => t('Has the seed been used?'),
