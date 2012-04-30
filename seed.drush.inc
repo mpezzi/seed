@@ -14,7 +14,7 @@ function seed_drush_command() {
     'seed-clear-all' => array(
       'description' => 'Clear all seeds.',
       'drupal dependencies' => array('seed'),
-      'aliases' => array('sca'),
+      'aliases' => array('scc'),
     ),
     'seed-generate-random' => array(
       'description' => 'Generate randomized seed times.',
