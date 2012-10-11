@@ -64,6 +64,9 @@ function seed_ui_overview_seeds($form, &$form_state, $term) {
   foreach ( $seeds as $seed ) {
     $form[$seed->sid]['#seed'] = $seed;
     $form[$seed->sid]['name'] = array('#markup' => check_plain($seed->name));
+    $form[$seed->sid]['seed_timestamp'] = array('#markup' => $seed->seed_timestamp ? format_date($seed->seed_timestamp) : t('None'));
+    $form[$seed->sid]['hold_timestamp'] = array('#markup' => $seed->hold_timestamp ? format_date($seed->hold_timestamp) : t('None'));
+    $form[$seed->sid]['used_timestamp'] = array('#markup' => $seed->used_timestamp ? format_date($seed->used_timestamp) : t('None'));
     $form[$seed->sid]['edit'] = array('#type' => 'link', '#title' => t('edit'), '#href' => "admin");
     $form[$seed->sid]['delete'] = array('#type' => 'link', '#title' => t('delete'), '#href' => "admin");
   }
@@ -91,13 +94,16 @@ function theme_seed_ui_overview_seeds($variables) {
 
       $row = array();
       $row[] = drupal_render($seed['name']);
+      $row[] = drupal_render($seed['seed_timestamp']);
+      $row[] = drupal_render($seed['hold_timestamp']);
+      $row[] = drupal_render($seed['used_timestamp']);
       $row[] = drupal_render($seed['edit']);
       $row[] = drupal_render($seed['delete']);
       $rows[] = $row;
     }
   }
 
-  $header = array(t('Seed name'));
+  $header = array(t('Seed name'), t('Seed Timestamp'), t('Hold Timestamp'), t('Used Timestamp'));
   $header[] = array('data' => t('Operations'), 'colspan' => '2');
 
   return theme('table', array('header' => $header, 'rows' => $rows, 'empty' => t('No seeds available. <a href="@link">Add seed</a>.', array('@link' => url('admin/structure/taxonomy/seed/add'))))) . drupal_render_children($form);
