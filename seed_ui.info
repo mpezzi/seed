@@ -1,0 +1,4 @@
+name = Seed UI
+description = Administrative interface to seed. Without this module, you cannot create or edit your seeds.
+package = Seed
+core = 7.x

@@ -1,0 +1,43 @@
+<?php
+
+/**
+ * @file
+ * Administrative interface to seed. Without this module, you cannot create or edit your seeds.
+ */
+
+
+/**
+ * Implements hook_menu().
+ */
+function seed_ui_menu() {
+  $items['admin/structure/seed'] = array(
+    'title' => 'Seeds',
+    'description' => 'Manage seeds.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('seed_ui_overview_terms'),
+    'access arguments' => array('administer seeds'),
+    'file' => 'seed_ui.admin.inc',
+  );
+  $items['admin/structure/seed/%taxonomy_term'] = array(
+    'title' => 'TK',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('seed_ui_overview_seeds', 3),
+    'access arguments' => array('administer seeds'),
+    'file' => 'seed_ui.admin.inc',
+  );
+  return $items;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function seed_ui_theme() {
+  return array(
+    'seed_ui_overview_terms' => array(
+      'render element' => 'form',
+    ),
+    'seed_ui_overview_seeds' => array(
+      'render element' => 'form',
+    ),
+  );
+}
