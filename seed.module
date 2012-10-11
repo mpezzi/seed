@@ -343,6 +343,24 @@ function seed_load($sid, $is_held = FALSE) {
 }
 
 /**
+ * Load all seeds for a taxonomy term.
+ *
+ * @param $tid
+ *   A Term ID.
+ * @return
+ *   An array of Seed Objects.
+ */
+function seed_load_by_tid($tid) {
+  $result = db_select('seed', 's')
+    ->fields('s')
+    ->condition('s.tid', $tid)
+    ->execute()
+    ->fetchAll();
+
+  return $result;
+}
+
+/**
  * Saves a seed.
  */
 function seed_save($seed) {
