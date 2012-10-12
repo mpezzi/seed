@@ -7,6 +7,16 @@
 
 
 /**
+ * Implements hook_help().
+ */
+function seed_ui_help($path, $arg) {
+  switch ( $path ) {
+    case 'admin/structure/seed':
+      return '<p>' . t('Seeds are for adding an instant win functionality to your system. They are grouped by taxomony terms from the Seed vocabulary.') . '</p>';
+  }
+}
+
+/**
  * Implements hook_menu().
  */
 function seed_ui_menu() {
