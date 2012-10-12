@@ -372,6 +372,8 @@ function seed_save($seed) {
   else {
     $status = drupal_write_record('seed', $seed);
   }
+
+  return $status;
 }
 
 /**
