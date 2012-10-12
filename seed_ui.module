@@ -43,6 +43,30 @@ function seed_ui_menu() {
     'type' => MENU_LOCAL_ACTION,
     'file' => 'seed_ui.admin.inc',
   );
+
+  $items['seed/%seed'] = array(
+    'title' => 'Seed',
+    'title callback' => 'seed_ui_title',
+    'title arguments' => array(1),
+    'page callback' => 'seed_ui_page',
+    'page arguments' => array(1),
+    'access arguments' => array('administer seeds'),
+    'file' => 'seed_ui.admin.inc',
+  );
+  $items['seed/%seed/view'] = array(
+    'title' => 'View',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+  $items['seed/%seed/edit'] = array(
+    'title' => 'Edit',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('seed_ui_form_seed', 1, NULL),
+    'access arguments' => array('administer seeds'),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 10,
+    'file' => 'seed_ui.admin.inc',
+  );
+  
   return $items;
 }
 

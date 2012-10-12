@@ -69,8 +69,9 @@ function seed_ui_overview_seeds($form, &$form_state, $term) {
     $form[$seed->sid]['seed_timestamp'] = array('#markup' => $seed->seed_timestamp ? format_date($seed->seed_timestamp) : t('None'));
     $form[$seed->sid]['hold_timestamp'] = array('#markup' => $seed->hold_timestamp ? format_date($seed->hold_timestamp) : t('None'));
     $form[$seed->sid]['used_timestamp'] = array('#markup' => $seed->used_timestamp ? format_date($seed->used_timestamp) : t('None'));
-    $form[$seed->sid]['edit'] = array('#type' => 'link', '#title' => t('edit'), '#href' => "admin");
-    $form[$seed->sid]['delete'] = array('#type' => 'link', '#title' => t('delete'), '#href' => "admin");
+    $form[$seed->sid]['view'] = array('#type' => 'link', '#title' => t('view'), '#href' => "seed/$seed->sid");
+    $form[$seed->sid]['edit'] = array('#type' => 'link', '#title' => t('edit'), '#href' => "seed/$seed->sid/edit");
+    $form[$seed->sid]['delete'] = array('#type' => 'link', '#title' => t('delete'), '#href' => "seed/$seed->sid/delete");
   }
 
   return $form;
@@ -99,6 +100,7 @@ function theme_seed_ui_overview_seeds($variables) {
       $row[] = drupal_render($seed['seed_timestamp']);
       $row[] = drupal_render($seed['hold_timestamp']);
       $row[] = drupal_render($seed['used_timestamp']);
+      $row[] = drupal_render($seed['view']);
       $row[] = drupal_render($seed['edit']);
       $row[] = drupal_render($seed['delete']);
       $rows[] = $row;
@@ -106,7 +108,7 @@ function theme_seed_ui_overview_seeds($variables) {
   }
 
   $header = array(t('Seed name'), t('Seed Timestamp'), t('Hold Timestamp'), t('Used Timestamp'));
-  $header[] = array('data' => t('Operations'), 'colspan' => '2');
+  $header[] = array('data' => t('Operations'), 'colspan' => '3');
 
   return theme('table', array('header' => $header, 'rows' => $rows, 'empty' => t('No seeds available. <a href="@link">Add seed</a>.', array('@link' => url('admin/structure/seed/' . $form['#term']->tid . '/add'))))) . drupal_render_children($form);
 }
@@ -145,6 +147,10 @@ function seed_ui_form_seed($form, &$form_state, $edit = array(), $term = NULL) {
   $form['#seed'] = (array) $seed;
   $form['#term'] = $term;
 
+  $form['sid'] = array(
+    '#type' => 'value',
+    '#value' => isset($seed->sid) ? $seed->sid : NULL,
+  );
   $form['uid'] = array(
     '#type' => 'value',
     '#value' => $seed->uid,
@@ -240,4 +246,35 @@ function seed_ui_form_seed_submit($form, &$form_state) {
       watchdog('seed', 'Updated new seed %name', array('%name' => $seed->name), WATCHDOG_NOTICE);
       break;
   }
+}
+
+/**
+ * Title callback for seed pages.
+ *
+ * @param $seed
+ *   A seed object.
+ * @return
+ *   The seed name to be used as the page title.
+ */
+function seed_ui_title($seed) {
+  return $seed->name;
+}
+
+/**
+ * Menu callback; displays seed information.
+ *
+ * @param $seed
+ *   A seed object.
+ * @return
+ *   The page content.
+ */
+function seed_ui_page($seed) {
+  drupal_set_title($seed->name);
+
+  $build = array();
+  $build['debug'] = array(
+    '#markup' => '<pre>' . print_r($seed, 1) . '</pre>',
+  );
+
+  return $build;
 }
