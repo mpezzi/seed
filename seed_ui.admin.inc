@@ -61,6 +61,8 @@ function theme_seed_ui_overview_terms($variables) {
 function seed_ui_overview_seeds($form, &$form_state, $term) {
   $seeds = seed_load_by_tid($term->tid);
 
+  $form['#term'] = $term;
+
   foreach ( $seeds as $seed ) {
     $form[$seed->sid]['#seed'] = $seed;
     $form[$seed->sid]['name'] = array('#markup' => check_plain($seed->name));
@@ -106,5 +108,136 @@ function theme_seed_ui_overview_seeds($variables) {
   $header = array(t('Seed name'), t('Seed Timestamp'), t('Hold Timestamp'), t('Used Timestamp'));
   $header[] = array('data' => t('Operations'), 'colspan' => '2');
 
-  return theme('table', array('header' => $header, 'rows' => $rows, 'empty' => t('No seeds available. <a href="@link">Add seed</a>.', array('@link' => url('admin/structure/taxonomy/seed/add'))))) . drupal_render_children($form);
+  return theme('table', array('header' => $header, 'rows' => $rows, 'empty' => t('No seeds available. <a href="@link">Add seed</a>.', array('@link' => url('admin/structure/seed/' . $form['#term']->tid . '/add'))))) . drupal_render_children($form);
+}
+
+/**
+ * Form function for the seed edit form.
+ *
+ * @ingroup forms
+ * @see seed_ui_form_term_submit()
+ */
+function seed_ui_form_seed($form, &$form_state, $edit = array(), $term = NULL) {
+  if ( !isset($form_state['seed']) ) {
+    $seed = is_object($edit) ? $edit : (object) $edit;
+    if ( !isset($term) && isset($seed->tid) ) {
+      $term = taxonomy_term_load($seed->tid);
+    }
+    $defaults = array(
+      'tid' => $term->tid,
+      'uid' => NULL,
+      'name' => '',
+      'seed_timestamp' => NULL,
+      'hold_timestamp' => NULL,
+      'used_timestamp' => NULL,
+      'used_token' => NULL,
+      'used' => 0,
+      'status' => 1,
+    );
+    foreach ( $defaults as $key => $value ) {
+      if ( !isset($seed->$key) ) {
+        $seed->$key = $value;
+      }
+    }
+    $form_state['seed'] = $seed;
+  }
+
+  $form['#seed'] = (array) $seed;
+  $form['#term'] = $term;
+
+  $form['uid'] = array(
+    '#type' => 'value',
+    '#value' => $seed->uid,
+  );
+  $form['tid'] = array(
+    '#type' => 'value',
+    '#value' => $seed->tid,
+  );
+  $form['name'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Name'),
+    '#default_value' => $seed->name,
+    '#maxlength' => 255,
+    '#required' => TRUE,
+    '#weight' => -5,
+  );
+  $form['seed_timestamp'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Seed Timestamp'),
+    '#default_value' => $seed->seed_timestamp,
+    '#maxlength' => 255,
+    '#required' => TRUE,
+    '#weight' => -1,
+  );
+  $form['hold_timestamp'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Hold Timestamp'),
+    '#default_value' => $seed->hold_timestamp,
+    '#maxlength' => 255,
+    '#weight' => 0,
+  );
+  $form['used_timestamp'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Used Timestamp'),
+    '#default_value' => $seed->used_timestamp,
+    '#maxlength' => 255,
+    '#weight' => 0,
+  );
+  $form['used_token'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Used Token'),
+    '#default_value' => $seed->used_token,
+    '#maxlength' => 255,
+    '#weight' => 1,
+  );
+  $form['used'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Used'),
+    '#default_value' => $seed->used,
+    '#weight' => 5,
+  );
+  $form['status'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Status'),
+    '#default_value' => $seed->status,
+    '#weight' => 6,
+  );
+
+  $form['actions'] = array(
+    '#type' => 'actions',
+    'submit' => array(
+      '#type' => 'submit',
+      '#value' => t('Save'),
+      '#weight' => 5,
+    ),
+  );
+
+  if ( isset($seed->sid) ) {
+    $form['actions']['delete'] = array(
+      '#type' => 'submit',
+      '#value' => t('Delete'),
+      '#weight' => 10,
+    );
+  }
+
+  return $form;
+}
+
+/**
+ * Submit handler to insert or update a seed.
+ */
+function seed_ui_form_seed_submit($form, &$form_state) {
+  $seed = (object) $form_state['values'];
+
+  $status = seed_save($seed);
+  switch ( $status ) {
+    case SAVED_NEW:
+      drupal_set_message(t('Created new seed %name', array('%name' => $seed->name)));
+      watchdog('seed', 'Created new seed %name', array('%name' => $seed->name), WATCHDOG_NOTICE);
+      break;
+    case SAVED_UPDATED:
+      drupal_set_message(t('Updated new seed %name', array('%name' => $seed->name)));
+      watchdog('seed', 'Updated new seed %name', array('%name' => $seed->name), WATCHDOG_NOTICE);
+      break;
+  }
 }
