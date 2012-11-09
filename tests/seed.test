@@ -23,7 +23,7 @@ class SeedAPITestCase extends SeedTestCase {
   /**
    * Implements getInfo().
    */
-  function getInfo() {
+  public static function getInfo() {
     return array(
       'name' => t('Seed API'),
       'description' => t('Tests the core API for proper inserts and updates to the database tables'),
@@ -34,7 +34,7 @@ class SeedAPITestCase extends SeedTestCase {
   /**
    * Implements setUp().
    */
-  function setUp() {
+  public function setUp() {
     parent::setUp('seed');
 
     $this->privileged_user = $this->drupalCreateUser(array('administer seeds'));
