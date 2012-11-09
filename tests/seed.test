@@ -152,4 +152,44 @@ class SeedAPITestCase extends SeedTestCase {
     $this->assertTrue($db_seed->hold_timestamp == 0, t("DB value for seed's hold_timestamp was reset to zero."));
     $this->assertTrue($db_seed->uid == 0, t("DB value for seed's uid was reset to zero."));
   }
+
+  /**
+   * Test replanting.
+   */
+  function testSeedReplant() {
+    seed_generate(10, 5);
+
+    variable_set('seed_replant', TRUE);
+    variable_set('seed_replant_time', 2);
+
+    sleep(6); // Wait 6 seconds for seed to be available.
+
+    $seed_1 = seed_find();
+
+    sleep(3); // Wait 3 seconds for seed to expire.
+
+    $seed_2 = seed_find();
+
+    $this->assertTrue($seed_1->sid == $seed_2->sid, t('Seed was replanted.'));
+  }
+
+  /**
+   * Test replanting.
+   */
+  function testSeedCull() {
+    seed_generate(10, 5);
+
+    variable_set('seed_cull', TRUE);
+    variable_set('seed_cull_time', 2);
+
+    sleep(6); // Wait 6 seconds for seed to be available.
+
+    $seed_1 = seed_find();
+
+    sleep(6); // Wait 6 seconds for seed to expire, and find a new seed.
+
+    $seed_2 = seed_find();
+
+    $this->assertTrue($seed_1->sid != $seed_2->sid, t('Seed was culled.'));
+  }
 }
