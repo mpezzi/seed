@@ -21,6 +21,11 @@ define('SEED_CATEGORY_DEFAULT_VID', 'seed_category_default_vid');
 define('SEED_REPLANT_TIME', 60 * 5);
 
 /**
+ * Seed replant time.
+ */
+define('SEED_CULL_TIME', 60 * 5);
+
+/**
  * Implements hook_menu().
  */
 function seed_menu() {
@@ -132,18 +137,34 @@ function seed_clear_all() {
 }
 
 /**
- * Replant seeds that have not expired.
+ * Replant seeds so they can be found again.
  */
-function seed_replant() {
+function seed_replant($expire = 300) {
   $seeds_replanted = db_update('seed')
     ->fields(array('status' => 1, 'uid' => 0, 'hold_timestamp' => 0))
-    ->condition('hold_timestamp', time() - SEED_REPLANT_TIME, '<')
+    ->condition('hold_timestamp', time() - $expire, '<')
     ->condition('used', 0)
     ->condition('status', 0)
     ->execute();
 
   if ( $seeds_replanted > 0 ) {
     watchdog('seed', 'Replanted @seeds_replanted seeds held for more than @replant_time seconds.', array('@seeds_replanted' => $seeds_replanted, '@replant_time' => SEED_REPLANT_TIME), WATCHDOG_NOTICE);
+  }
+}
+
+/**
+ * Cull expired seeds so the can't be found again.
+ */
+function seed_cull($expire = 300) {
+  $seeds_culled = db_update('seed')
+    ->fields(array('status' => 0, 'used' => 1, 'uid' => 0, 'used_timestamp' => time()))
+    ->condition('hold_timestamp', time() - $expire, '<')
+    ->condition('used', 0)
+    ->condition('status', 0)
+    ->execute();
+
+  if ( $seeds_culled > 0 ) {
+    watchdog('seed', 'Culled @seeds_culled seeds held for more than @cull_time seconds.', array('@seeds_culled' => $seeds_culled, '@cull_time' => SEED_CULL_TIME), WATCHDOG_NOTICE);
   }
 }
 
@@ -196,9 +217,14 @@ function seed_find($tid = NULL, $hold = TRUE, $account = NULL) {
     }
   }
 
-  // Revive used seeds that have been used within a time period but haven't expired.
-  if ( variable_get('seed_replant', TRUE) ) {
-    seed_replant();
+  // Replant held seeds that have expired.
+  if ( variable_get('seed_replant', FALSE) ) {
+    seed_replant(variable_get('seed_replant_time', 300));
+  }
+
+  // Cull held seeds that have expired.
+  if ( variable_get('seed_cull', FALSE) ) {
+    seed_cull(variable_get('seed_cull_time', 300));
   }
 
   // Look for seed currently in use by the currently logged in user.
