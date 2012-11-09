@@ -48,6 +48,13 @@ function drush_seed_clear_all() {
 
 /**
  * Command callback. Generate randomized seed times.
+ *
+ * @param $start
+ *   A period start time, unix timestamp or english textual datetime description.
+ * @param $end
+ *   A period end time, unix timestamp or english textual datetime description.
+ * @param $window
+ *   A window duration, unix timestamp or english textual datetime description. Defaults to 24 hours.
  */
 function drush_seed_generate_random($start, $end, $window = 86400) {
   if ( !is_numeric($start) ) {
@@ -59,7 +66,7 @@ function drush_seed_generate_random($start, $end, $window = 86400) {
   }
 
   if ( !is_numeric($window) ) {
-    $window = strtotime($window);
+    $window = strtotime($window) - time();
   }
 
   // Calculate the number of seeds required.
