@@ -137,48 +137,21 @@ function seed_clear_all() {
 }
 
 /**
- * Replant seeds so they can be found again.
- */
-function seed_replant($expire = 300) {
-  $seeds_replanted = db_update('seed')
-    ->fields(array('status' => 1, 'uid' => 0, 'hold_timestamp' => 0))
-    ->condition('hold_timestamp', time() - $expire, '<')
-    ->condition('used', 0)
-    ->condition('status', 0)
-    ->execute();
-
-  if ( $seeds_replanted > 0 ) {
-    watchdog('seed', 'Replanted @seeds_replanted seeds held for more than @replant_time seconds.', array('@seeds_replanted' => $seeds_replanted, '@replant_time' => SEED_REPLANT_TIME), WATCHDOG_NOTICE);
-  }
-}
-
-/**
- * Cull expired seeds so the can't be found again.
- */
-function seed_cull($expire = 300) {
-  $seeds_culled = db_update('seed')
-    ->fields(array('status' => 0, 'used' => 1, 'uid' => 0, 'used_timestamp' => time()))
-    ->condition('hold_timestamp', time() - $expire, '<')
-    ->condition('used', 0)
-    ->condition('status', 0)
-    ->execute();
-
-  if ( $seeds_culled > 0 ) {
-    watchdog('seed', 'Culled @seeds_culled seeds held for more than @cull_time seconds.', array('@seeds_culled' => $seeds_culled, '@cull_time' => SEED_CULL_TIME), WATCHDOG_NOTICE);
-  }
-}
-
-/**
  * Generate seeds.
  */
 function seed_generate($number_of_seeds = 10, $interval = 60, $tid = NULL) {
   seed_clear_all();
 
+  $time = time();
+
   for ( $i = 1; $i <= $number_of_seeds; $i++ ) {
     $seed = (object) array(
       'tid' => $tid,
-      'seed_timestamp' => time() + ( $i * $interval ),
       'name' => 'generated' . $i,
+      'seed_timestamp' => $time + ( $i * $interval ),
+      'seed_timestamp_end' => $time + ( $i * $interval ) + 120,
+      'hold_life' => 120,
+      'replant' => 1,
       'status' => 1,
     );
 
@@ -199,130 +172,87 @@ function seed_generate($number_of_seeds = 10, $interval = 60, $tid = NULL) {
  *   A seed object, or FALSE if the seed is not found.
  */
 function seed_find($tid = NULL, $hold = TRUE, $account = NULL) {
-  global $user;
+  return seed_find_process(array('tid' => $tid, 'hold' => $hold, 'account' => $account));
+}
 
-  $time = time();
+/**
+ * Find a seed.
+ *
+ * @param $tid
+ *   A term id.
+ * @param $hold
+ *   Whether to hold the seed for the user.
+ * @return
+ *   A seed object, or FALSE if the seed is not found.
+ */
+function seed_find_process($params = array()) {
+  $params += array(
+    'tid' => NULL,
+    'hold' => TRUE,
+    'time' => time(),
+    'account' => $GLOBALS['user'],
+  );
 
-  if ( is_null($account) ) {
-    $account = $user;
+  if ( is_null($params['account']) ) {
+    $params['account'] = $GLOBALS['user'];
   }
 
   // If account doesn't have access, stop now.
-  if ( !seed_find_access($account) ) {
+  if ( !seed_find_access($params['account']) ) {
     return FALSE;
   }
 
-  // Cultivate (or clean) out any old or stale seeds.
+  // 1. Cultivate (or clean) out any old or stale seeds.
   seed_cultivate();
 
-  // Look for a seed currently held by the user.
-  $seed = db_select('seed', 's')
-    ->fields('s', array())
-    ->condition('s.uid', $account->uid)
-    ->condition('s.used', 0)
-    ->condition('s.status', 0)
-    ->range(0, 1)
-    ->execute()
-    ->fetchObject();
+  // 2. Find a seed currently held by the user.
+  $seed = seed_find_held($params);
 
-  // If the user isn't holding a seed, look for a new seed.
+  // 3. If no seed was found, look for a new seed without any limits.
   if ( $seed === FALSE ) {
     $query = db_select('seed', 's')
       ->fields('s', array())
       ->condition('s.status', 1)
-      ->condition('s.seed_timestamp', $time, '<')
+      ->condition('s.seed_timestamp', $params['time'], '<')
       ->condition('s.seed_timestamp_end', 0)
       ->orderBy('s.seed_timestamp')
       ->range(0, 1);
 
-    if ( !is_null($tid) ) {
-      $query->condition('s.tid', $tid);
+    if ( !is_null($params['tid']) ) {
+      $query->condition('s.tid', $params['tid']);
     }
 
     $seed = $query->execute()->fetchObject();
   }
 
-  if ( $seed !== FALSE ) {
-
-    // If we are holding this seed, mark it as unavailable for now.
-    if ( $hold ) {
-
-      // The first time the seed is found, send a watchdog notice.
-      if ( $seed->uid == 0 ) {
-        watchdog('seed', 'Seed @seedname was found by @username.', array('@seedname' => $seed->name, '@username' => $account->name), WATCHDOG_NOTICE, l('user', 'user/' . $account->uid));
-      }
-
-      // Update seed to be marked as held.
-      $seed->hold_timestamp = $time;
-      $seed->uid = $account->uid;
-      $seed->status = 0;
-      seed_save($seed);
-    }
-
-    return $seed;
-  }
-
-  return FALSE;
-}
-
-/**
- * Find a time limited seed.
- */
-function seed_find_limited($tid = NULL, $hold = TRUE, $account = NULL) {
-  global $user;
-
-  $time = time();
-
-  if ( is_null($account) ) {
-    $account = $user;
-  }
-
-  // If account doesn't have access, stop now.
-  if ( !seed_find_access($account) ) {
-    return FALSE;
-  }
-
-  // Cultivate (or clean) out any old or stale seeds.
-  seed_cultivate();
-
-  // Look for a seed currently held by the user.
-  $seed = db_select('seed', 's')
-    ->fields('s', array())
-    ->condition('s.uid', $account->uid)
-    ->condition('s.hold_timestamp_end', $time, '>')
-    ->condition('s.used', 0)
-    ->condition('s.status', 0)
-    ->range(0, 1)
-    ->execute()
-    ->fetchObject();
-
-  // If the user isn't holding a seed, look for a new seed.
+  // 4. If no seed was found, look for a new seed with limits.
   if ( $seed === FALSE ) {
     $query = db_select('seed', 's')
       ->fields('s', array())
       ->condition('s.status', 1)
-      ->condition('s.seed_timestamp', $time, '<')
-      ->condition('s.seed_timestamp_end', $time, '>')
+      ->condition('s.seed_timestamp', $params['time'], '<')
+      ->condition('s.seed_timestamp_end', $params['time'], '>')
       ->orderBy('s.seed_timestamp')
       ->range(0, 1);
 
-    if ( !is_null($tid) ) {
-      $query->condition('s.tid', $tid);
+    if ( !is_null($params['tid']) ) {
+      $query->condition('s.tid', $params['tid']);
     }
 
     $seed = $query->execute()->fetchObject();
   }
 
+  // 5. If a seed was found, update some information on it.
   if ( $seed !== FALSE ) {
 
     // The first time the seed is found, send a watchdog notice.
-    if ( $hold && $seed->uid == 0 ) {
-      watchdog('seed', 'Seed @seedname was found by @username.', array('@seedname' => $seed->name, '@username' => $account->name), WATCHDOG_NOTICE, l('user', 'user/' . $account->uid));
+    if ( $params['hold'] && $seed->uid == 0 ) {
+      watchdog('seed', 'Seed @seedname was found by @username.', array('@seedname' => $seed->name, '@username' => $params['account']->name), WATCHDOG_NOTICE, l('user', 'user/' . $params['account']->uid));
 
       // Update seed to be marked as held.
-      $seed->hold_timestamp = $time;
-      $seed->hold_timestamp_end = $time + $seed->hold_life;
-      $seed->uid = $account->uid;
+      $seed->hold_timestamp = $params['time'];
+      $seed->hold_timestamp_end = $params['time'] + $seed->hold_life;
+      $seed->uid = $params['account']->uid;
       $seed->status = 0;
       seed_save($seed);
     }
@@ -330,8 +260,84 @@ function seed_find_limited($tid = NULL, $hold = TRUE, $account = NULL) {
     return $seed;
   }
 
+  // 6. If we got this far, there wasn't a seed available.
   return FALSE;
 }
+
+/**
+ * Cultivate (or clean) expired seeds.
+ */
+function seed_cultivate() {
+  // Replant held seeds that have expired.
+  if ( variable_get('seed_replant', TRUE) ) {
+    seed_replant();
+  }
+
+  // Cull held seeds that have expired.
+  if ( variable_get('seed_pluck', TRUE) ) {
+    seed_pluck();
+  }
+}
+
+/**
+ * Replant seeds so they can be found again.
+ */
+function seed_replant() {
+  $seeds_replanted = db_update('seed')
+    ->fields(array('status' => 1, 'uid' => 0, 'hold_timestamp' => 0, 'hold_timestamp_end' => 0))
+    ->condition('hold_timestamp_end', time(), '>')
+    ->condition('replant', 1)
+    ->condition('used', 0)
+    ->condition('status', 0)
+    ->execute();
+
+  if ( $seeds_replanted > 0 ) {
+    watchdog('seed', 'Replanted @seeds_replanted expired seeds.', array('@seeds_replanted' => $seeds_replanted), WATCHDOG_NOTICE);
+  }
+}
+
+/**
+ * Pluck expired seeds so the can't be found again.
+ */
+function seed_pluck() {
+  $seeds_plucked = db_update('seed')
+    ->fields(array('status' => 0, 'uid' => 0, 'used' => 1, 'used_timestamp' => time()))
+    ->condition('hold_timestamp_end', time(), '>')
+    ->condition('replant', 0)
+    ->condition('used', 0)
+    ->condition('status', 0)
+    ->execute();
+
+  if ( $seeds_plucked > 0 ) {
+    watchdog('seed', 'Plucked @seeds_plucked expired seeds.', array('@seeds_plucked' => $seeds_plucked), WATCHDOG_NOTICE);
+  }
+}
+
+/**
+ * Find a seed currently being held by a user.
+ *
+ * @param $account
+ *   A user object.
+ * @return
+ *   TRUE if a seed is found, FALSE otherwise.
+ */
+function seed_find_held($params) {
+  dpm($params);
+
+  $seed = db_select('seed', 's')
+    ->fields('s', array())
+    ->condition('s.uid', $params['account']->uid)
+    ->condition('s.used', 0)
+    ->condition('s.status', 0)
+    ->orderBy('s.seed_timestamp')
+    ->range(0, 1)
+    ->execute()
+    ->fetchObject();
+
+  return $seed;
+}
+
+
 
 /**
  * Returns weather the account has access to find a seed.
@@ -355,21 +361,6 @@ function seed_find_access($account) {
   }
 
   return TRUE;
-}
-
-/**
- * Cultivate (or clean) old stale seeds.
- */
-function seed_cultivate() {
-  // Replant held seeds that have expired.
-  if ( variable_get('seed_replant', FALSE) ) {
-    seed_replant(variable_get('seed_replant_time', 300));
-  }
-
-  // Cull held seeds that have expired.
-  if ( variable_get('seed_cull', FALSE) ) {
-    seed_cull(variable_get('seed_cull_time', 300));
-  }
 }
 
 /**
