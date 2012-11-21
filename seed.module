@@ -227,7 +227,7 @@ function seed_find($tid = NULL, $hold = TRUE, $account = NULL) {
     seed_cull(variable_get('seed_cull_time', 300));
   }
 
-  // Look for seed currently in use by the currently logged in user.
+  // Look for a seed currently in use by the logged in user.
   $sid = db_select('seed', 's')
     ->fields('s', array('sid'))
     ->condition('s.uid', $account->uid)
