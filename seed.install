@@ -42,8 +42,26 @@ function seed_schema() {
           'not null' => TRUE,
           'default' => 0,
         ),
+        'seed_timestamp_end' => array(
+          'description' => 'Seed Timestamp End',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
         'hold_timestamp' => array(
           'description' => 'Hold Timestamp',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'hold_timestamp_end' => array(
+          'description' => 'Hold Timestamp End',
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
+        'hold_life' => array(
+          'description' => 'Hold Life',
           'type' => 'int',
           'not null' => TRUE,
           'default' => 0,
@@ -106,6 +124,34 @@ function seed_update_7100() {
     'type' => 'varchar',
     'length' => 32,
   );
-
   db_add_field('seed', 'used_token', $field);
+}
+
+/**
+ * Add seed_length field.
+ */
+function seed_update_7101() {
+  $field = array(
+    'description' => 'Seed Timestamp End',
+    'type' => 'int',
+    'not null' => TRUE,
+    'default' => 0,
+  );
+  db_add_field('seed', 'seed_timestamp_end', $field);
+
+  $field = array(
+    'description' => 'Hold Timestamp End',
+    'type' => 'int',
+    'not null' => TRUE,
+    'default' => 0,
+  );
+  db_add_field('seed', 'hold_timestamp_end', $field);
+
+  $field = array(
+    'description' => 'Hold Life',
+    'type' => 'int',
+    'not null' => TRUE,
+    'default' => 0,
+  );
+  db_add_field('seed', 'hold_life', $field);
 }
