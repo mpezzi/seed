@@ -6,41 +6,28 @@
  */
 
 
-/**
- * Seed base test class with various helper functions.
- */
 class SeedTestCase extends DrupalWebTestCase {
+  protected $privileged_user;
+  protected $authenticated_user;
+  protected $authenticated_user2;
 
-}
-
-/**
- * API Tests.
- */
-class SeedAPITestCase extends SeedTestCase {
-  private $privileged_user;
-  private $authenticated_user;
-
-  /**
-   * Implements getInfo().
-   */
   public static function getInfo() {
     return array(
-      'name' => t('Seed API'),
-      'description' => t('Tests the core API for proper inserts and updates to the database tables'),
-      'group' => t('Seed'),
+      'name' => 'Seed',
+      'description' => 'Tests the core API for proper inserts and updates to the database tables',
+      'group' => 'Seed',
     );
   }
 
   /**
    * Implements setUp().
    */
-  public function setUp() {
+  function setUp() {
     parent::setUp('seed');
-
+    // Create users.
     $this->privileged_user = $this->drupalCreateUser(array('administer seeds'));
     $this->authenticated_user = $this->drupalCreateUser(array('use seeds'));
     $this->authenticated_user2 = $this->drupalCreateUser(array('use seeds'));
-    $this->drupalLogin($this->authenticated_user);
   }
 
   /**
@@ -64,6 +51,8 @@ class SeedAPITestCase extends SeedTestCase {
    * Call seed_save() and seed_load().
    */
   function testSeedStorage() {
+    $this->drupalLogin($this->authenticated_user);
+
     // Save and load a seed object, and ensure it matches what's stored in the database.
     $seed = (object) array(
       'seed_timestamp' => time(),
@@ -82,6 +71,8 @@ class SeedAPITestCase extends SeedTestCase {
    * Call seed_find().
    */
   function testSeedFind() {
+    $this->drupalLogin($this->authenticated_user);
+
     seed_generate(10, 5);
 
     // Generated seeds should not be available yet.
@@ -114,6 +105,8 @@ class SeedAPITestCase extends SeedTestCase {
    * Call seed_use().
    */
   function testSeedUse() {
+    $this->drupalLogin($this->authenticated_user);
+
     seed_generate(10, 5);
 
     sleep(6); // Wait 6 seconds for seed to be available.
@@ -135,6 +128,8 @@ class SeedAPITestCase extends SeedTestCase {
    * Call seed_drop()
    */
   function testSeedDrop() {
+    $this->drupalLogin($this->authenticated_user);
+
     seed_generate(10, 5);
 
     sleep(6); // Wait 6 seconds for seed to be available.
@@ -157,6 +152,8 @@ class SeedAPITestCase extends SeedTestCase {
    * Test replanting.
    */
   function testSeedReplant() {
+    $this->drupalLogin($this->authenticated_user);
+
     seed_generate(10, 5);
 
     variable_set('seed_replant', TRUE);
@@ -177,6 +174,8 @@ class SeedAPITestCase extends SeedTestCase {
    * Test replanting.
    */
   function testSeedCull() {
+    $this->drupalLogin($this->authenticated_user);
+
     seed_generate(10, 5);
 
     variable_set('seed_cull', TRUE);
