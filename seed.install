@@ -77,6 +77,13 @@ function seed_schema() {
           'type' => 'varchar',
           'length' => 32,
         ),
+        'replant' => array(
+          'description' => 'Replant',
+          'type' => 'int',
+          'size' => 'tiny',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
         'used' => array(
           'description' => 'Used',
           'type' => 'int',
@@ -154,4 +161,13 @@ function seed_update_7101() {
     'default' => 0,
   );
   db_add_field('seed', 'hold_life', $field);
+
+  $field = array(
+    'description' => 'Replant',
+    'type' => 'int',
+    'size' => 'tiny',
+    'not null' => TRUE,
+    'default' => 0,
+  );
+  db_add_field('seed', 'replant', $field);
 }
