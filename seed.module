@@ -207,19 +207,13 @@ function seed_find($tid = NULL, $hold = TRUE, $account = NULL) {
     $account = $user;
   }
 
+  // If account doesn't have access, stop now.
   if ( !seed_find_access($account) ) {
     return FALSE;
   }
 
-  // Replant held seeds that have expired.
-  if ( variable_get('seed_replant', FALSE) ) {
-    seed_replant(variable_get('seed_replant_time', 300));
-  }
-
-  // Cull held seeds that have expired.
-  if ( variable_get('seed_cull', FALSE) ) {
-    seed_cull(variable_get('seed_cull_time', 300));
-  }
+  // Cultivate (or clean) out any old or stale seeds.
+  seed_cultivate();
 
   // Look for a seed currently held by the user.
   $seed = db_select('seed', 's')
@@ -283,19 +277,13 @@ function seed_find_limited($tid = NULL, $hold = TRUE, $account = NULL) {
     $account = $user;
   }
 
+  // If account doesn't have access, stop now.
   if ( !seed_find_access($account) ) {
     return FALSE;
   }
 
-  // Replant held seeds that have expired.
-  if ( variable_get('seed_replant', FALSE) ) {
-    seed_replant(variable_get('seed_replant_time', 300));
-  }
-
-  // Cull held seeds that have expired.
-  if ( variable_get('seed_cull', FALSE) ) {
-    seed_cull(variable_get('seed_cull_time', 300));
-  }
+  // Cultivate (or clean) out any old or stale seeds.
+  seed_cultivate();
 
   // Look for a seed currently held by the user.
   $seed = db_select('seed', 's')
@@ -367,6 +355,21 @@ function seed_find_access($account) {
   }
 
   return TRUE;
+}
+
+/**
+ * Cultivate (or clean) old stale seeds.
+ */
+function seed_cultivate() {
+  // Replant held seeds that have expired.
+  if ( variable_get('seed_replant', FALSE) ) {
+    seed_replant(variable_get('seed_replant_time', 300));
+  }
+
+  // Cull held seeds that have expired.
+  if ( variable_get('seed_cull', FALSE) ) {
+    seed_cull(variable_get('seed_cull_time', 300));
+  }
 }
 
 /**
