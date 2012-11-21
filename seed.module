@@ -207,16 +207,8 @@ function seed_find($tid = NULL, $hold = TRUE, $account = NULL) {
     $account = $user;
   }
 
-  // Ensure user account has permission to use seeds.
-  if ( !user_access('use seeds', $account) ) {
+  if ( !seed_find_access($account) ) {
     return FALSE;
-  }
-
-  // Does the user have a role that is to be ignored?
-  foreach ( variable_get('seed_ignored_roles', array()) as $id ) {
-    if ( $id != 0 && array_key_exists($id, $account->roles) ) {
-      return FALSE;
-    }
   }
 
   // Replant held seeds that have expired.
@@ -291,16 +283,8 @@ function seed_find_limited($tid = NULL, $hold = TRUE, $account = NULL) {
     $account = $user;
   }
 
-  // Ensure user account has permission to use seeds.
-  if ( !user_access('use seeds', $account) ) {
+  if ( !seed_find_access($account) ) {
     return FALSE;
-  }
-
-  // Does the user have a role that is to be ignored?
-  foreach ( variable_get('seed_ignored_roles', array()) as $id ) {
-    if ( $id != 0 && array_key_exists($id, $account->roles) ) {
-      return FALSE;
-    }
   }
 
   // Replant held seeds that have expired.
@@ -359,6 +343,30 @@ function seed_find_limited($tid = NULL, $hold = TRUE, $account = NULL) {
   }
 
   return FALSE;
+}
+
+/**
+ * Returns weather the account has access to find a seed.
+ *
+ * @param $account
+ *   A user object.
+ * @return
+ *   TRUE if the account has access, otherwise FALSE
+ */
+function seed_find_access($account) {
+  // Ensure user account has permission to use seeds.
+  if ( !user_access('use seeds', $account) ) {
+    return FALSE;
+  }
+
+  // Does the user have a role that is to be ignored?
+  foreach ( variable_get('seed_ignored_roles', array()) as $id ) {
+    if ( $id != 0 && array_key_exists($id, $account->roles) ) {
+      return FALSE;
+    }
+  }
+
+  return TRUE;
 }
 
 /**
