@@ -27,6 +27,8 @@ function seed_drush_command() {
       'options' => array(
         'tid' => dt('Category ID'),
         'name' => dt('Seed Name'),
+        'life' => dt('life'),
+        'hold_life' => dt('hold_life'),
         // @TODO: Limit generated seeds for daytime only.
       ),
       'aliases' => array('sgr'),
@@ -69,6 +71,22 @@ function drush_seed_generate_random($start, $end, $window = 86400) {
     $window = strtotime($window) - time();
   }
 
+  // Set life.
+  if ( drush_get_option('life') ) {
+    $life = drush_get_option('life');
+  }
+  else {
+    $life = 0;
+  }
+
+  // Set hold life.
+  if ( drush_get_option('hold_life') ) {
+    $hold_life = drush_get_option('hold_life');
+  }
+  else {
+    $hold_life = 0;
+  }
+
   // Calculate the number of seeds required.
   $seeds = floor( ( $end - $start ) / $window );
 
@@ -77,6 +95,14 @@ function drush_seed_generate_random($start, $end, $window = 86400) {
   drush_log(t('Starts: @start', array('@start' => format_date($start, 'long'))), 'success');
   drush_log(t('Ends: @end', array('@end' => format_date($end, 'long'))), 'success');
   drush_log(t('Window: @window', array('@window' => format_interval($window))), 'success');
+
+  if ( $life > 0 ) {
+    drush_log(t('Life: @life', array('@life' => format_interval($life))), 'success');
+  }
+
+  if ( $hold_life > 0 ) {
+    drush_log(t('Hold Life: @life', array('@life' => format_interval($hold_life))), 'success');
+  }
 
   for ( $i = 0; $i < $seeds; $i++ ) {
     $min = $start + ( $window * $i );
@@ -102,8 +128,10 @@ function drush_seed_generate_random($start, $end, $window = 86400) {
     // Create and save seed.
     $seed = (object) array(
       'tid' => $tid,
-      'seed_timestamp' => $seed_timestamp,
       'name' => $name . '_' . ( $i + 1 ),
+      'seed_timestamp' => $seed_timestamp,
+      'seed_timestamp_end' => ( $life > 0 ) ? $seed_timestamp + $life : 0,
+      'hold_life' => $hold_life,
       'status' => 1,
     );
 
