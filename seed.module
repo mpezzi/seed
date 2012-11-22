@@ -370,9 +370,16 @@ function seed_drop($sid) {
   if ( $seed = seed_load($sid, TRUE) ) {
     $account = user_load($seed->uid);
 
-    $seed->status = 1;
-    $seed->hold_timestamp = 0;
-    $seed->uid = 0;
+    if ( $seed->replant ) {
+      $seed->status = 1;
+      $seed->hold_timestamp = 0;
+      $seed->uid = 0;
+    }
+    else {
+      $seed->used = 0;
+      $seed->status = 0;
+      $seed->uid = 0;
+    }
 
     seed_save($seed);
 
