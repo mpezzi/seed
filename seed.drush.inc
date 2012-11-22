@@ -25,15 +25,90 @@ function seed_drush_command() {
         'window' => 'Window to randomize between.',
       ),
       'options' => array(
-        'tid' => dt('Category ID'),
         'name' => dt('Seed Name'),
-        'life' => dt('life'),
-        'hold_life' => dt('hold_life'),
+        'tid' => dt('Category ID'),
+        'time' => dt('Time'),
+        'seed_life' => dt('Seed Life'),
+        'hold_life' => dt('Hold Life'),
+        'replant' => dt('Replant'),
+        'status' => dt('Status'),
         // @TODO: Limit generated seeds for daytime only.
       ),
       'aliases' => array('sgr'),
     ),
+    'seed-generate-test-replant' => array(
+      'description' => 'Generates test results',
+      'drupal dependencies' => array('seed'),
+      'arguments' => array(
+        'num_seeds' => 'Number of seeds.',
+        'offset' => 'Offset.',
+      ),
+    ),
+    'seed-generate-test-replant-with-limit' => array(
+      'description' => 'Generates test results',
+      'drupal dependencies' => array('seed'),
+      'arguments' => array(
+        'num_seeds' => 'Number of seeds.',
+        'offset' => 'Offset.',
+      ),
+    ),
+    'seed-generate-test-nonreplant' => array(
+      'description' => 'Generates test results',
+      'drupal dependencies' => array('seed'),
+      'arguments' => array(
+        'num_seeds' => 'Number of seeds.',
+        'offset' => 'Offset.',
+      ),
+    ),
   );
+}
+
+function drush_seed_generate_test_replant($num_seeds = 10, $offset = 0, $window = 20, $tid = NULL) {
+  // Create seeds a set amount appart.
+  for ( $i = 0; $i < $num_seeds; $i++ ) {
+    $seed = (object) array(
+      'tid' => $tid,
+      'name' => 'seedtest' . '_' . ( $i + 1 ),
+      'seed_timestamp' => ( $i * $window ) + $offset,
+      'seed_timestamp_end' => 0,
+      'hold_life' => 10,
+      'replant' => TRUE,
+      'status' => TRUE,
+    );
+    seed_save($seed);
+  }
+}
+
+function drush_seed_generate_test_replant_with_limit($num_seeds = 10, $offset = 0, $window = 20, $tid = NULL) {
+  // Create seeds a set amount appart.
+  for ( $i = 0; $i < $num_seeds; $i++ ) {
+    $seed = (object) array(
+      'tid' => $tid,
+      'name' => 'seedtest' . '_' . ( $i + 1 ),
+      'seed_timestamp' => ( $i * $window ) + $offset,
+      'seed_timestamp_end' => ( $i * $window ) + $offset + 10,
+      'hold_life' => 10,
+      'replant' => TRUE,
+      'status' => TRUE,
+    );
+    seed_save($seed);
+  }
+}
+
+function drush_seed_generate_test_nonreplant($num_seeds = 10, $offset = 0, $window = 20, $tid = NULL) {
+  // Create seeds a set amount appart.
+  for ( $i = 0; $i < $num_seeds; $i++ ) {
+    $seed = (object) array(
+      'tid' => $tid,
+      'name' => 'seedtest' . '_' . ( $i + 1 ),
+      'seed_timestamp' => ( $i * $window ) + $offset,
+      'seed_timestamp_end' => ( $i * $window ) + $offset + 10,
+      'hold_life' => 10,
+      'replant' => FALSE,
+      'status' => TRUE,
+    );
+    seed_save($seed);
+  }
 }
 
 /**
@@ -59,6 +134,14 @@ function drush_seed_clear_all() {
  *   A window duration, unix timestamp or english textual datetime description. Defaults to 24 hours.
  */
 function drush_seed_generate_random($start, $end, $window = 86400) {
+  $name = drush_get_option('name', 'seed');
+  $tid = drush_get_option('tid', NULL);
+  $time = drush_get_option('time', time());
+  $seed_life = drush_get_option('seed_life', 0);
+  $hold_life = drush_get_option('hold_life', 0);
+  $replant = drush_get_option('replant', 0);
+  $status = drush_get_option('status', 1);
+
   if ( !is_numeric($start) ) {
     $start = strtotime($start);
   }
@@ -68,23 +151,7 @@ function drush_seed_generate_random($start, $end, $window = 86400) {
   }
 
   if ( !is_numeric($window) ) {
-    $window = strtotime($window) - time();
-  }
-
-  // Set life.
-  if ( drush_get_option('life') ) {
-    $life = drush_get_option('life');
-  }
-  else {
-    $life = 0;
-  }
-
-  // Set hold life.
-  if ( drush_get_option('hold_life') ) {
-    $hold_life = drush_get_option('hold_life');
-  }
-  else {
-    $hold_life = 0;
+    $window = strtotime($window) - $time;
   }
 
   // Calculate the number of seeds required.
@@ -96,47 +163,32 @@ function drush_seed_generate_random($start, $end, $window = 86400) {
   drush_log(t('Ends: @end', array('@end' => format_date($end, 'long'))), 'success');
   drush_log(t('Window: @window', array('@window' => format_interval($window))), 'success');
 
-  if ( $life > 0 ) {
-    drush_log(t('Life: @life', array('@life' => format_interval($life))), 'success');
+  if ( $seed_life > 0 ) {
+    drush_log(t('Seed Life: @life', array('@life' => format_interval($seed_life))), 'success');
   }
 
   if ( $hold_life > 0 ) {
     drush_log(t('Hold Life: @life', array('@life' => format_interval($hold_life))), 'success');
   }
 
-  for ( $i = 0; $i < $seeds; $i++ ) {
-    $min = $start + ( $window * $i );
-    $max = $start + ( $window * $i ) + $window;
-    $seed_timestamp = rand($min, $max);
+  $seed_generate_status = seed_generate_random(array(
+    'start' => $start,
+    'end' => $end,
+    'window' => $window,
+    'seed_life' => $seed_life,
+    'hold_life' => $hold_life,
+    'name' => $name,
+    'tid' => $tid,
+    'time' => $time,
+    'replant' => $replant,
+    'status' => $status,
+  ));
 
-    // Set seed name.
-    if ( drush_get_option('name') ) {
-      $name = drush_get_option('name');
-    }
-    else {
-      $name = 'generated';
-    }
-
-    // Set seed tid.
-    if ( drush_get_option('tid') ) {
-      $tid = drush_get_option('tid');
-    }
-    else {
-      $tid = NULL;
-    }
-
-    // Create and save seed.
-    $seed = (object) array(
-      'tid' => $tid,
-      'name' => $name . '_' . ( $i + 1 ),
-      'seed_timestamp' => $seed_timestamp,
-      'seed_timestamp_end' => ( $life > 0 ) ? $seed_timestamp + $life : 0,
-      'hold_life' => $hold_life,
-      'status' => 1,
-    );
-
-    seed_save($seed);
+  if ( $seed_generate_status ) {
+    drush_log(format_plural($seeds, 'Successfully generated 1 seed.', 'Successfully generated @count seeds.'), 'success');
   }
-
-  drush_log(format_plural($i, 'Successfully generated 1 seed.', 'Successfully generated @count seeds.'), 'success');
+  else {
+    drush_log(format_plural($seeds, 'Error generating 1 seed.', 'Error generating @count seeds.'), 'error');
+  }
+  
 }
