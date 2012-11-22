@@ -322,8 +322,6 @@ function seed_pluck() {
  *   TRUE if a seed is found, FALSE otherwise.
  */
 function seed_find_held($params) {
-  dpm($params);
-
   $seed = db_select('seed', 's')
     ->fields('s', array())
     ->condition('s.uid', $params['account']->uid)
