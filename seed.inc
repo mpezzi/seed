@@ -15,28 +15,66 @@ function seed_clear_all() {
 }
 
 /**
- * Generate seeds.
+ * Generate random seeds.
  */
-function seed_generate($number_of_seeds = 10, $interval = 60, $tid = NULL) {
-  seed_clear_all();
+function seed_generate_random($params = array()) {
+  $params += array(
+    'start' => 0,
+    'end' => 0,
+    'window' => 86400,
+    'seed_life' => 0,
+    'hold_life' => 0,
+    'name' => 'seed',
+    'tid' => NULL,
+    'time' => time(),
+    'replant' => 0,
+    'status' => 1,
+  );
 
-  $time = time();
-
-  for ( $i = 1; $i <= $number_of_seeds; $i++ ) {
-    $seed = (object) array(
-      'tid' => $tid,
-      'name' => 'generated' . $i,
-      'seed_timestamp' => $time + ( $i * $interval ),
-      'seed_timestamp_end' => $time + ( $i * $interval ) + 120,
-      'hold_life' => 120,
-      'replant' => 1,
-      'status' => 1,
-    );
-
-    seed_save($seed);
+  // Parse english textual datetime description arguments to unix timestamps.
+  foreach ( $params as $key => $value ) {
+    if ( in_array($key, array('start', 'end')) ) {
+      if ( !is_numeric($params[$key]) ) {
+        $params[$key] = strtotime($params[$key], $params['time']);
+      }
+    }
   }
 
-  drupal_set_message(t('Successfully generated @number_of_seeds seeds.', array('@number_of_seeds' => $number_of_seeds)));
+  // Parse english textual datetime description arguments to unix timestamps.
+  // we also need to subtract the time for string arguments.
+  foreach ( $params as $key => $value ) {
+    if ( in_array($key, array('window', 'seed_life', 'hold_life')) ) {
+      if ( !is_numeric($params[$key]) ) {
+        $params[$key] = strtotime($params[$key], $params['time']) - $params['time'];
+      }
+    }
+  }
+
+  // Determine the number of seeds required.
+  $num_seeds = floor( ( $params['end'] - $params['start'] ) / $params['window'] );
+
+  // Create each seed and keep track of any errors in $status.
+  $status = array();
+  for ( $i = 0; $i < $num_seeds; $i++ ) {
+    $min = $params['start'] + ( $params['window'] * $i );
+    $max = $params['start'] + ( $params['window'] * $i ) + $params['window'];
+    $seed_timestamp = rand($min, $max);
+
+    $seed = (object) array(
+      'tid' => $params['tid'],
+      'name' => $params['name'] . '_' . ( $i + 1 ),
+      'seed_timestamp' => $seed_timestamp,
+      'seed_timestamp_end' => $params['seed_life'] ? $seed_timestamp + $params['seed_life'] : 0,
+      'hold_life' => $params['hold_life'],
+      'replant' => $params['replant'],
+      'status' => $params['status'],
+    );
+
+    $status[] = seed_save($seed);
+  }
+
+  // Determine if any of the seeds we saved had an issue.
+  return !array_search(FALSE, $status, TRUE);
 }
 
 /**
@@ -49,8 +87,8 @@ function seed_generate($number_of_seeds = 10, $interval = 60, $tid = NULL) {
  * @return
  *   A seed object, or FALSE if the seed is not found.
  */
-function seed_find($tid = NULL, $hold = TRUE, $account = NULL) {
-  return seed_find_process(array('tid' => $tid, 'hold' => $hold, 'account' => $account));
+function xseed_find($tid = NULL, $hold = TRUE, $account = NULL) {
+  //return seed_find_process(array('tid' => $tid, 'hold' => $hold, 'account' => $account));
 }
 
 /**
@@ -63,7 +101,9 @@ function seed_find($tid = NULL, $hold = TRUE, $account = NULL) {
  * @return
  *   A seed object, or FALSE if the seed is not found.
  */
-function seed_find_process($params = array()) {
+function seed_find($params = array()) {
+  //dpm(__FUNCTION__);
+
   $params += array(
     'tid' => NULL,
     'hold' => TRUE,
@@ -81,10 +121,11 @@ function seed_find_process($params = array()) {
   }
 
   // 1. Cultivate (or clean) out any old or stale seeds.
-  seed_cultivate();
+  seed_cultivate($params['time']);
 
   // 2. Find a seed currently held by the user.
   $seed = seed_find_held($params);
+  //$seed = FALSE;
 
   // 3. If no seed was found, look for a new seed without any limits.
   if ( $seed === FALSE ) {
@@ -145,29 +186,37 @@ function seed_find_process($params = array()) {
 /**
  * Cultivate (or clean) expired seeds.
  */
-function seed_cultivate() {
+function seed_cultivate($time = NULL) {
+  //dpm(__FUNCTION__);
+
   // Replant held seeds that have expired.
   if ( variable_get('seed_replant', TRUE) ) {
-    seed_replant();
+    seed_replant($time);
   }
 
   // Cull held seeds that have expired.
   if ( variable_get('seed_pluck', TRUE) ) {
-    seed_pluck();
+    seed_pluck($time);
   }
 }
 
 /**
  * Replant seeds so they can be found again.
  */
-function seed_replant() {
+function seed_replant($time = NULL) {
+  if ( is_null($time) ) {
+    $time = time();
+  }
+
   $seeds_replanted = db_update('seed')
     ->fields(array('status' => 1, 'uid' => 0, 'hold_timestamp' => 0, 'hold_timestamp_end' => 0))
-    ->condition('hold_timestamp_end', time(), '>')
+    ->condition('hold_timestamp_end', $time, '<')
     ->condition('replant', 1)
     ->condition('used', 0)
     ->condition('status', 0)
     ->execute();
+
+  //dpm(__FUNCTION__, $seeds_replanted);
 
   if ( $seeds_replanted > 0 ) {
     watchdog('seed', 'Replanted @seeds_replanted expired seeds.', array('@seeds_replanted' => $seeds_replanted), WATCHDOG_NOTICE);
@@ -177,14 +226,20 @@ function seed_replant() {
 /**
  * Pluck expired seeds so the can't be found again.
  */
-function seed_pluck() {
+function seed_pluck($time = NULL) {
+  if ( is_null($time) ) {
+    $time = time();
+  }
+
   $seeds_plucked = db_update('seed')
     ->fields(array('status' => 0, 'uid' => 0, 'used' => 1, 'used_timestamp' => time()))
-    ->condition('hold_timestamp_end', time(), '>')
+    ->condition('hold_timestamp_end', $time, '<')
     ->condition('replant', 0)
     ->condition('used', 0)
     ->condition('status', 0)
     ->execute();
+
+  //dpm(__FUNCTION__, $seeds_plucked);
 
   if ( $seeds_plucked > 0 ) {
     watchdog('seed', 'Plucked @seeds_plucked expired seeds.', array('@seeds_plucked' => $seeds_plucked), WATCHDOG_NOTICE);
@@ -200,6 +255,8 @@ function seed_pluck() {
  *   TRUE if a seed is found, FALSE otherwise.
  */
 function seed_find_held($params) {
+  //dpm(__FUNCTION__);
+
   $seed = db_select('seed', 's')
     ->fields('s', array())
     ->condition('s.uid', $params['account']->uid)
