@@ -157,7 +157,6 @@ class SeedTestCase extends DrupalWebTestCase {
     seed_generate(10, 5);
 
     variable_set('seed_replant', TRUE);
-    variable_set('seed_replant_time', 2);
 
     sleep(6); // Wait 6 seconds for seed to be available.
 
@@ -179,7 +178,6 @@ class SeedTestCase extends DrupalWebTestCase {
     seed_generate(10, 5);
 
     variable_set('seed_cull', TRUE);
-    variable_set('seed_cull_time', 2);
 
     sleep(6); // Wait 6 seconds for seed to be available.
 
