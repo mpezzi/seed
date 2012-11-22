@@ -18,16 +18,6 @@ define('SEED_CATEGORY_NAME', 'Seeds');
 define('SEED_CATEGORY_DEFAULT_VID', 'seed_category_default_vid');
 
 /**
- * Seed replant time.
- */
-define('SEED_REPLANT_TIME', 60 * 5);
-
-/**
- * Seed replant time.
- */
-define('SEED_CULL_TIME', 60 * 5);
-
-/**
  * Implements hook_menu().
  */
 function seed_menu() {
