@@ -214,6 +214,35 @@ class SeedTestCase extends DrupalWebTestCase {
   }
 
   /**
+   * Test seed_find() with non replantable seeds with limits.
+   */
+  function testSeedFindNonReplantableMultiUser() {
+    $this->drupalLogin($this->authenticated_user);
+    $this->createSeedNonReplantable(10, 0, 20, NULL);
+
+    // First user looks for the first seed (existing).
+    $seed_1 = seed_find(array('time' => 5, 'account' => $this->authenticated_user));
+    $this->assertTrue($seed_1 !== FALSE, t('First user first seed was found.'));
+
+    // First user looks for the first seed again (held).
+    $seed_2 = seed_find(array('time' => 6, 'account' => $this->authenticated_user));
+    $this->assertTrue($seed_2 !== FALSE && $seed_2->sid == $seed_1->sid, t('First user held seed was found.'));
+
+    // Second user looks for the first seed (held).
+    $seed_3 = seed_find(array('time' => 7, 'account' => $this->authenticated_user2));
+    $this->assertTrue($seed_3 === FALSE, t('Second user first held seed was not found.'));
+
+    // First user looks for expired seed (expired).
+    $seed_4 = seed_find(array('time' => 16, 'account' => $this->authenticated_user));
+    $this->assertTrue($seed_4 === FALSE, t('First user first expired seed was not found.'));
+
+    // Second user looks for a new seed (exisiting).
+    $seed_5 = seed_find(array('time' => 25, 'account' => $this->authenticated_user2));
+    $this->assertTrue($seed_5 !== FALSE, t('Second user second seed was found.'));
+    $this->assertTrue($seed_5 !== FALSE && $seed_5->sid !== $seed_1->sid, t('Second user second seed was found is different from first seed.'));
+  }
+
+  /**
    * Call seed_find().
    */
   function xtestSeedFind() {
