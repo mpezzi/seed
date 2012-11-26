@@ -243,37 +243,22 @@ class SeedTestCase extends DrupalWebTestCase {
   }
 
   /**
-   * Call seed_find().
+   * Test seed_use() with replantable seeds.
    */
-  function xtestSeedFind() {
+  function testSeedUseReplantable() {
     $this->drupalLogin($this->authenticated_user);
+    $this->createSeedReplantable(10, 0, 20, NULL);
 
-    seed_generate(10, 5);
+    // First user looks for the first seed (existing).
+    $seed_1 = seed_find(array('time' => 5, 'account' => $this->authenticated_user));
+    $this->assertTrue($seed_1 !== FALSE, t('First user first seed was found.'));
 
-    // Generated seeds should not be available yet.
-    $seed = seed_find();
-    $this->assertFalse($seed, t('Generated seeds are not initially available.'));
-
-    sleep(6); // Wait 6 seconds for a seed.
-
-    // Find first seed for logged in user.
-    $first_seed_user1 = seed_find();
-    $this->assertTrue($first_seed_user1, t('First user successfully found and held seed.'));
-
-    sleep(6); // Wait 6 seconds for next seed.
-
-    // Find second seed for second user and ensure it's not equal to the logged in users seed.
-    $first_seed_user2 = seed_find(NULL, TRUE, $this->authenticated_user2);
-    $this->assertTrue($first_seed_user2, t('Second user sucessfully found and held a seed.'));
-    $this->assertTrue($first_seed_user1 != $first_seed_user2, t("Users are not holding the same seeds."));
-
-    sleep(6); // Wait 6 seconds for next seed.
-
-    // First user should received the same held seed they've initial found.
-    $second_seed_user1 = seed_find();
-    // The hold timestamp will be different, unset this when comparing the seeds.
-    unset($first_seed_user1->hold_timestamp, $second_seed_user1->hold_timestamp);
-    $this->assertTrue($first_seed_user1 == $second_seed_user1, t('First user finding a new seed will always find the held seed.'));
+    // First user uses the first seed (held).
+    $seed_2 = seed_use($seed_1->sid);
+    $this->assertTrue($seed_2 !== FALSE && $seed_2->sid == $seed_1->sid, t('First user used first seed.'));
+    $this->assertTrue($seed_2 !== FALSE && $seed_2->used == TRUE, t('First user used first seed was marked as used.'));
+    $this->assertTrue($seed_2 !== FALSE && $seed_2->used_timestamp !== 0, t('First user used first seed was set a used timestamp.'));
+    $this->assertTrue($seed_2 !== FALSE && !empty($seed_2->used_token), t('First user used first seed token generated (!token).', array('!token' => $seed_2->used_token)));
   }
 
   /**
