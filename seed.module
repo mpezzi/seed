@@ -91,6 +91,13 @@ function seed_block_view($delta = '') {
 }
 
 /**
+ * Implements hook_views_api().
+ */
+function seed_views_api() {
+  return array('api' => 3.0);
+}
+
+/**
  * Seed testing form.
  */
 function seed_test_form($form, &$form_state) {

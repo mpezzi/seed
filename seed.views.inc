@@ -6,10 +6,10 @@
 function seed_views_data() {
   $data['seed']['table']['group'] = t('Seed');
   $data['seed']['table']['base'] = array(
-    'field' => 'uid',
+    'field' => 'sid',
     'title' => t('Seed'),
     'help' => t('Seed data.'),
-    'access query tag' => 'user_access',
+    // 'access query tag' => 'user_access',
   );
 
   $data['seed']['sid'] = array(
@@ -82,9 +82,39 @@ function seed_views_data() {
     ),
   );
 
+  $data['seed']['seed_timestamp_end'] = array(
+    'title' => t('Seed Timestamp End'),
+    'help' => t('Seed Timestamp End'),
+    'field' => array(
+      'handler' => 'views_handler_field_date',
+      'click sortable' => TRUE,
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort_date',
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_date',
+    ),
+  );
+
   $data['seed']['hold_timestamp'] = array(
     'title' => t('Hold Timestamp'),
     'help' => t('Hold Timestamp'),
+    'field' => array(
+      'handler' => 'views_handler_field_date',
+      'click sortable' => TRUE,
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort_date',
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_date',
+    ),
+  );
+
+  $data['seed']['hold_timestamp_end'] = array(
+    'title' => t('Hold Timestamp End'),
+    'help' => t('Hold Timestamp End'),
     'field' => array(
       'handler' => 'views_handler_field_date',
       'click sortable' => TRUE,
@@ -130,6 +160,23 @@ function seed_views_data() {
     ),
   );
 
+  $data['seed']['replant'] = array(
+    'title' => t('Replantable'),
+    'help' => t('Is the seed replantable?'),
+    'field' => array(
+      'handler' => 'views_handler_field_boolean',
+      'click sortable' => TRUE,
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_boolean_operator',
+      'label' => t('Used'),
+      'type' => 'yes-no',
+    ),
+  );
+
   $data['seed']['used'] = array(
     'title' => t('Used'),
     'help' => t('Has the seed been used?'),
@@ -151,17 +198,18 @@ function seed_views_data() {
     'title' => t('Status'),
     'help' => t('Seed Status'),
     'field' => array(
-      'handler' => 'views_handler_field_numeric',
+      'handler' => 'views_handler_field_boolean',
       'click sortable' => TRUE,
     ),
     'sort' => array(
       'handler' => 'views_handler_sort',
     ),
     'filter' => array(
-      'handler' => 'views_handler_filter_numeric',
+      'handler' => 'views_handler_filter_boolean_operator',
+      'label' => t('Used'),
+      'type' => 'yes-no',
     ),
   );
 
   return $data;
 }
-
