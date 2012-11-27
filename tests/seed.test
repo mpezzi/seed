@@ -139,7 +139,7 @@ class SeedTestCase extends DrupalWebTestCase {
     $seed_2 = seed_find(array('time' => 6, 'account' => $this->authenticated_user));
     $this->assertTrue($seed_2 !== FALSE && $seed_2->sid == $seed_1->sid, t('First held seed was found.'));
 
-    // Look for the second seed (non-existing, too early).
+    // Look for the first seed (existing, replanted).
     $seed_3 = seed_find(array('time' => 16, 'account' => $this->authenticated_user));
     $this->assertTrue($seed_3 !== FALSE && $seed_3->sid == $seed_1->sid, t('First seed was replanted and found again.'));
   }
