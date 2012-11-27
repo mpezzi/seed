@@ -258,17 +258,19 @@ function seed_pluck($time = NULL) {
 function seed_find_held($params) {
   //dpm(__FUNCTION__);
 
-  $seed = db_select('seed', 's')
+  $query = db_select('seed', 's')
     ->fields('s', array())
     ->condition('s.uid', $params['account']->uid)
     ->condition('s.used', 0)
     ->condition('s.status', 0)
     ->orderBy('s.seed_timestamp')
-    ->range(0, 1)
-    ->execute()
-    ->fetchObject();
+    ->range(0, 1);
 
-  return $seed;
+  if ( !is_null($params['tid']) ) {
+    $query->condition('s.tid', $params['tid']);
+  }
+
+  return $query->execute()->fetchObject();
 }
 
 
