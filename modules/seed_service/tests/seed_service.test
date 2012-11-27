@@ -163,4 +163,34 @@ class SeedServiceTestCase extends ServicesWebTestCase {
     $seed_1 = seed_load($result['body']->sid);
     $this->assertTrue($result['body']->sid == $seed_1->sid, t('Seed find result matches seed.'));
   }
+
+  /**
+   * Test seed_drop().
+   */
+  function xtestSeedUse() {
+    $this->drupalLogin($this->authenticated_user);
+    $this->createSeedReplantable(10, 0, 20, NULL);
+
+    $result_1 = $this->servicesPost($this->endpoint->path . '/seed/find', array());
+    $this->assertTrue(!empty($result_1['body']), t('Seed was found.'));
+    $result_2 = $this->servicesPost($this->endpoint->path . '/seed/use', array('sid' => $result_1['body']->sid));
+    $this->assertTrue(!empty($result_2['body']), t('Seed was used.'));
+    $this->assertTrue($result_2['body']->sid == $result_1['body']->sid, t('Seed used was the same as seed found.'));
+    $this->assertTrue($result_2['body']->uid == $this->authenticated_user->uid, t('Seed was assigned to user.'));
+    $this->assertTrue($result_2['body']->status == FALSE, t('Seed was set to be not found.'));
+    $this->assertTrue($result_2['body']->used == TRUE, t('Seed was set to used.'));
+    $this->assertTrue($result_2['body']->used != 0, t('Seed used timestamp was set.'));
+  }
+
+  /**
+   * Test seed_use().
+   */
+  function xtestSeedDrop() {
+    $this->drupalLogin($this->authenticated_user);
+    $this->createSeedReplantable(10, 0, 20, NULL);
+
+    $result = $this->servicesPost($this->endpoint->path . '/seed/find', array());
+    $seed_1 = seed_load($result['body']->sid);
+    $this->assertTrue($result['body']->sid == $seed_1->sid, t('Seed find result matches seed.'));
+  }
 }
