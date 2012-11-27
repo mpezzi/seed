@@ -150,6 +150,7 @@ function seed_find($params = array()) {
       ->fields('s', array())
       ->condition('s.status', 1)
       ->condition('s.seed_timestamp', $params['time'], '<')
+      ->condition('s.seed_timestamp_end', 0, '<>')
       ->condition('s.seed_timestamp_end', $params['time'], '>')
       ->orderBy('s.seed_timestamp')
       ->range(0, 1);
