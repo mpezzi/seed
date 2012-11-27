@@ -1,4 +1,4 @@
 name = Seed UI
-description = Administrative interface to seed. Without this module, you cannot create or edit your seeds.
+description = Administrative interface to seed. Without this module, you cannot create or edit your seeds. (Currently in Development, for now use Drush commands).
 package = Seed
 core = 7.x
