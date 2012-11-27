@@ -1,0 +1,166 @@
+<?php
+
+/**
+ * @file
+ * Tests for Seed Services integration.
+ */
+
+if ( !class_exists('ServicesWebTestCase') ) {
+  return;
+}
+
+class SeedServiceTestCase extends ServicesWebTestCase {
+  protected $endpoint = NULL;
+  protected $authenticated_user = NULL;
+
+  public static function getInfo() {
+    return array(
+      'name' => t('Seed Service'),
+      'description' => t('Tests the services resource seed and actions'),
+      'group' => t('Seed'),
+    );
+  }
+
+  public function setUp() {
+    parent::setUp(
+      'ctools',
+      'services',
+      'rest_server',
+      'seed',
+      'seed_service'
+    );
+
+    $this->authenticated_user = $this->drupalCreateUser(array('use seeds'));
+    
+    $this->endpoint = $this->saveNewEndpoint();
+    $this->endpoint->resources += array(
+      'seed' => array(
+        'alias' => '',
+        'operations' => array(
+          'index' => array('enabled' => 1),
+          'retrieve' => array('enabled' => 1),
+        ),
+        'actions' => array(
+          'drop' => array('enabled' => 1),
+          'find' => array('enabled' => 1),
+          'replant' => array('enabled' => 1),
+          'use' => array('enabled' => 1),
+        ),
+      ),
+    );
+    services_endpoint_save($this->endpoint);
+  }
+
+  /**
+   * Returns a seed row as an object directly from the database.
+   *
+   * @param $sid
+   *   A Seed ID.
+   * @return
+   *   A Seed Object.
+   */
+  function getSeed($sid) {
+    return db_select('seed', 's')
+      ->fields('s')
+      ->condition('s.sid', $sid)
+      ->range(0, 1)
+      ->execute()
+      ->fetchObject();
+  }
+
+  /**
+   * Create replantable seeds.
+   *
+   * @param $num_seeds
+   *   Number of seeds to generate. Defaults to 10.
+   * @param $offset
+   *   Offset the seeds. Defaults to 0.
+   * @param $time_apart
+   *   Time between seeds. Defaults to 20.
+   * @param $tid
+   *   A Term ID. Defaults to NULL.
+   */
+  function createSeedReplantable($num_seeds = 10, $offset = 0, $time_apart = 20, $tid = NULL) {
+    // Create seeds a set amount appart.
+    for ( $i = 0; $i < $num_seeds; $i++ ) {
+      $seed = (object) array(
+        'tid' => $tid,
+        'name' => 'seedtest' . '_' . ( $i + 1 ),
+        'seed_timestamp' => ( $i * $time_apart ) + $offset,
+        'seed_timestamp_end' => 0,
+        'hold_life' => 10,
+        'replant' => TRUE,
+        'status' => TRUE,
+      );
+      seed_save($seed);
+    }
+  }
+
+  /**
+   * Create replantable seeds with limit.
+   *
+   * @param $num_seeds
+   *   Number of seeds to generate. Defaults to 10.
+   * @param $offset
+   *   Offset the seeds. Defaults to 0.
+   * @param $time_apart
+   *   Time between seeds. Defaults to 20.
+   * @param $tid
+   *   A Term ID. Defaults to NULL.
+   */
+  function createSeedReplantableWithLimit($num_seeds = 10, $offset = 0, $time_apart = 20, $tid = NULL) {
+    // Create seeds a set amount appart.
+    for ( $i = 0; $i < $num_seeds; $i++ ) {
+      $seed = (object) array(
+        'tid' => $tid,
+        'name' => 'seedtest' . '_' . ( $i + 1 ),
+        'seed_timestamp' => ( $i * $time_apart ) + $offset,
+        'seed_timestamp_end' => ( $i * $time_apart ) + $offset + 10,
+        'hold_life' => 10,
+        'replant' => TRUE,
+        'status' => TRUE,
+      );
+      seed_save($seed);
+    }
+  }
+
+  /**
+   * Create non-replantable seeds.
+   *
+   * @param $num_seeds
+   *   Number of seeds to generate. Defaults to 10.
+   * @param $offset
+   *   Offset the seeds. Defaults to 0.
+   * @param $time_apart
+   *   Time between seeds. Defaults to 20.
+   * @param $tid
+   *   A Term ID. Defaults to NULL.
+   */
+  function createSeedNonReplantable($num_seeds = 10, $offset = 0, $time_apart = 20, $tid = NULL) {
+    // Create seeds a set amount appart.
+    for ( $i = 0; $i < $num_seeds; $i++ ) {
+      $seed = (object) array(
+        'tid' => $tid,
+        'name' => 'seedtest' . '_' . ( $i + 1 ),
+        'seed_timestamp' => ( $i * $time_apart ) + $offset,
+        'seed_timestamp_end' => ( $i * $time_apart ) + $offset + 10,
+        'hold_life' => 10,
+        'replant' => FALSE,
+        'status' => TRUE,
+      );
+      seed_save($seed);
+    }
+  }
+
+  /**
+   * Test seed_find().
+   */
+  function testSeedFind() {
+    $this->drupalLogin($this->authenticated_user);
+    $this->createSeedReplantable(10, 0, 20, NULL);
+
+    $result = $this->servicesPost($this->endpoint->path . '/seed/find', array());
+    $seed_1 = seed_load($result['body']->sid);
+    $this->assertTrue($result['body']->sid == $seed_1->sid, t('Seed find result matches seed.'));
+  }
+}

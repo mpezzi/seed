@@ -3,5 +3,7 @@ description = Exposes seed functionality via a service
 package = Seed
 core = 7.x
 
+files[] = tests/seed_service.test
+
 dependencies[] = seed
 dependencies[] = services
