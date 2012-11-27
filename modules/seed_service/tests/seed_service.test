@@ -167,13 +167,14 @@ class SeedServiceTestCase extends ServicesWebTestCase {
   /**
    * Test seed_drop().
    */
-  function xtestSeedUse() {
+  function testSeedUse() {
     $this->drupalLogin($this->authenticated_user);
     $this->createSeedReplantable(10, 0, 20, NULL);
 
     $result_1 = $this->servicesPost($this->endpoint->path . '/seed/find', array());
     $this->assertTrue(!empty($result_1['body']), t('Seed was found.'));
-    $result_2 = $this->servicesPost($this->endpoint->path . '/seed/use', array('sid' => $result_1['body']->sid));
+
+    $result_2 = $this->servicesPost($this->endpoint->path . '/seed/use', array('sid' => (int) $result_1['body']->sid));
     $this->assertTrue(!empty($result_2['body']), t('Seed was used.'));
     $this->assertTrue($result_2['body']->sid == $result_1['body']->sid, t('Seed used was the same as seed found.'));
     $this->assertTrue($result_2['body']->uid == $this->authenticated_user->uid, t('Seed was assigned to user.'));
@@ -185,12 +186,19 @@ class SeedServiceTestCase extends ServicesWebTestCase {
   /**
    * Test seed_use().
    */
-  function xtestSeedDrop() {
+  function testSeedDrop() {
     $this->drupalLogin($this->authenticated_user);
     $this->createSeedReplantable(10, 0, 20, NULL);
 
-    $result = $this->servicesPost($this->endpoint->path . '/seed/find', array());
-    $seed_1 = seed_load($result['body']->sid);
-    $this->assertTrue($result['body']->sid == $seed_1->sid, t('Seed find result matches seed.'));
+    $result_1 = $this->servicesPost($this->endpoint->path . '/seed/find', array());
+    $this->assertTrue(!empty($result_1['body']), t('Seed was found.'));
+
+    $result_2 = $this->servicesPost($this->endpoint->path . '/seed/drop', array('sid' => (int) $result_1['body']->sid));
+    $this->assertTrue(!empty($result_2['body']), t('Seed was dropped.'));
+    $this->assertTrue($result_2['body']->sid == $result_1['body']->sid, t('Seed used was the same as seed found.'));
+    $this->assertTrue($result_2['body']->uid == 0, t('Seed assigned to nobody.'));
+    $this->assertTrue($result_2['body']->status == TRUE, t('Seed was set to be found.'));
+    $this->assertTrue($result_2['body']->used == FALSE, t('Seed was set to not used.'));
+    $this->assertTrue($result_2['body']->hold_timestamp == 0, t('Seed hold timestamp was unset.'));
   }
 }
