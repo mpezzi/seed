@@ -5,30 +5,7 @@
  * Provides test classes for seed module.
  */
 
-
 class SeedTestCase extends DrupalWebTestCase {
-  protected $privileged_user;
-  protected $authenticated_user;
-  protected $authenticated_user2;
-
-  public static function getInfo() {
-    return array(
-      'name' => 'Seed',
-      'description' => 'Tests the core API for proper inserts and updates to the database tables',
-      'group' => 'Seed',
-    );
-  }
-
-  /**
-   * Implements setUp().
-   */
-  function setUp() {
-    parent::setUp('seed');
-    // Create users.
-    $this->privileged_user = $this->drupalCreateUser(array('administer seeds'));
-    $this->authenticated_user = $this->drupalCreateUser(array('use seeds'));
-    $this->authenticated_user2 = $this->drupalCreateUser(array('use seeds'));
-  }
 
   /**
    * Returns a seed row as an object directly from the database.
@@ -49,14 +26,23 @@ class SeedTestCase extends DrupalWebTestCase {
 
   /**
    * Create replantable seeds.
+   *
+   * @param $num_seeds
+   *   Number of seeds to generate. Defaults to 10.
+   * @param $offset
+   *   Offset the seeds. Defaults to 0.
+   * @param $time_apart
+   *   Time between seeds. Defaults to 20.
+   * @param $tid
+   *   A Term ID. Defaults to NULL.
    */
-  function createSeedReplantable($num_seeds = 10, $offset = 0, $window = 20, $tid = NULL) {
+  function createSeedReplantable($num_seeds = 10, $offset = 0, $time_apart = 20, $tid = NULL) {
     // Create seeds a set amount appart.
     for ( $i = 0; $i < $num_seeds; $i++ ) {
       $seed = (object) array(
         'tid' => $tid,
         'name' => 'seedtest' . '_' . ( $i + 1 ),
-        'seed_timestamp' => ( $i * $window ) + $offset,
+        'seed_timestamp' => ( $i * $time_apart ) + $offset,
         'seed_timestamp_end' => 0,
         'hold_life' => 10,
         'replant' => TRUE,
@@ -68,15 +54,24 @@ class SeedTestCase extends DrupalWebTestCase {
 
   /**
    * Create replantable seeds with limit.
+   *
+   * @param $num_seeds
+   *   Number of seeds to generate. Defaults to 10.
+   * @param $offset
+   *   Offset the seeds. Defaults to 0.
+   * @param $time_apart
+   *   Time between seeds. Defaults to 20.
+   * @param $tid
+   *   A Term ID. Defaults to NULL.
    */
-  function createSeedReplantableWithLimit($num_seeds = 10, $offset = 0, $window = 20, $tid = NULL) {
+  function createSeedReplantableWithLimit($num_seeds = 10, $offset = 0, $time_apart = 20, $tid = NULL) {
     // Create seeds a set amount appart.
     for ( $i = 0; $i < $num_seeds; $i++ ) {
       $seed = (object) array(
         'tid' => $tid,
         'name' => 'seedtest' . '_' . ( $i + 1 ),
-        'seed_timestamp' => ( $i * $window ) + $offset,
-        'seed_timestamp_end' => ( $i * $window ) + $offset + 10,
+        'seed_timestamp' => ( $i * $time_apart ) + $offset,
+        'seed_timestamp_end' => ( $i * $time_apart ) + $offset + 10,
         'hold_life' => 10,
         'replant' => TRUE,
         'status' => TRUE,
@@ -87,21 +82,52 @@ class SeedTestCase extends DrupalWebTestCase {
 
   /**
    * Create non-replantable seeds.
+   *
+   * @param $num_seeds
+   *   Number of seeds to generate. Defaults to 10.
+   * @param $offset
+   *   Offset the seeds. Defaults to 0.
+   * @param $time_apart
+   *   Time between seeds. Defaults to 20.
+   * @param $tid
+   *   A Term ID. Defaults to NULL.
    */
-  function createSeedNonReplantable($num_seeds = 10, $offset = 0, $window = 20, $tid = NULL) {
+  function createSeedNonReplantable($num_seeds = 10, $offset = 0, $time_apart = 20, $tid = NULL) {
     // Create seeds a set amount appart.
     for ( $i = 0; $i < $num_seeds; $i++ ) {
       $seed = (object) array(
         'tid' => $tid,
         'name' => 'seedtest' . '_' . ( $i + 1 ),
-        'seed_timestamp' => ( $i * $window ) + $offset,
-        'seed_timestamp_end' => ( $i * $window ) + $offset + 10,
+        'seed_timestamp' => ( $i * $time_apart ) + $offset,
+        'seed_timestamp_end' => ( $i * $time_apart ) + $offset + 10,
         'hold_life' => 10,
         'replant' => FALSE,
         'status' => TRUE,
       );
       seed_save($seed);
     }
+  }
+}
+
+class SeedAPITestCase extends SeedTestCase {
+  protected $privileged_user;
+  protected $authenticated_user;
+  protected $authenticated_user2;
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Seed',
+      'description' => 'Tests the core API for proper inserts and updates to the database tables',
+      'group' => 'Seed',
+    );
+  }
+
+  public function setUp() {
+    parent::setUp('seed');
+    // Create users.
+    $this->privileged_user = $this->drupalCreateUser(array('administer seeds'));
+    $this->authenticated_user = $this->drupalCreateUser(array('use seeds'));
+    $this->authenticated_user2 = $this->drupalCreateUser(array('use seeds'));
   }
 
   /**
