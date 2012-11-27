@@ -103,6 +103,9 @@ function seed_schema() {
       'indexes' => array(
         'tid' => array('tid'),
         'uid' => array('uid'),
+        'find' => array('status', 'seed_timestamp', 'seed_timestamp_end'),
+        'replant' => array('status', 'uid', 'hold_timestamp', 'hold_timestamp_end'),
+        'pluck' => array('status', 'uid', 'used', 'used_timestamp'),
       ),
     ),
   );
