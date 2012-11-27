@@ -262,29 +262,6 @@ class SeedTestCase extends DrupalWebTestCase {
   }
 
   /**
-   * Call seed_use().
-   */
-  function xtestSeedUse() {
-    $this->drupalLogin($this->authenticated_user);
-
-    seed_generate(10, 5);
-
-    sleep(6); // Wait 6 seconds for seed to be available.
-
-    // Find a seed, use it and check properties.
-    $seed = seed_find();
-    $used_seed = seed_use($seed->sid);
-    $this->assertTrue($used_seed->used == TRUE, t('Seed has been marked off as used.'));
-    $this->assertTrue($used_seed->used_timestamp != 0, t("Seed's timestamp must not be zero."));
-
-    // Ensure database values match.
-    $db_seed = $this->getSeed($used_seed->sid);
-    $this->assertTrue($db_seed->used == TRUE, t('DB value for seed indicates that it was used.'));
-    $this->assertTrue($db_seed->used_timestamp != 0, t("DB value for seed's used_timestamp was set to a non-zero value."));
-    $this->assertTrue($db_seed->used_timestamp == $used_seed->used_timestamp, t("DB value for the seed's used_timestamp matches the Used seed's used_timestamp."));
-  }
-
-  /**
    * Call seed_drop()
    */
   function xtestSeedDrop() {
