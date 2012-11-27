@@ -280,6 +280,7 @@ class SeedTestCase extends DrupalWebTestCase {
     $seed_3 = seed_drop($seed_1->sid);
     $this->assertTrue($seed_3 !== FALSE && $seed_3->sid == $seed_1->sid, t('First user drops first seed.'));
     $this->assertTrue($seed_3 !== FALSE && $seed_3->uid == 0, t('Dropped seed is not assigned to a user.'));
+    $this->assertTrue($seed_3 !== FALSE && $seed_3->hold_timestamp == 0, t('Dropped seed has no hold timestamp.'));
     $this->assertTrue($seed_3 !== FALSE && $seed_3->status == TRUE, t('Dropped seed is replanted and can be found.'));
     $this->assertTrue($seed_3 !== FALSE && $seed_3->used == FALSE, t('Dropped seed is marked as not being used.'));
 
