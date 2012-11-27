@@ -107,7 +107,7 @@ function _seed_resource_index() {
  *   A seed object or FALSE.
  */
 function _seed_resource_find($tid = NULL, $hold = TRUE) {
-  return seed_find($tid, $hold);
+  return seed_find(array('tid' => $tid, 'hold' => $hold));
 }
 
 /**
