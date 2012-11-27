@@ -337,15 +337,19 @@ function seed_drop($sid) {
  * @return
  *   A seed object or FALSE if unable to use.
  */
-function seed_use($sid) {
+function seed_use($sid, $time = NULL) {
   global $user;
+
+  if ( is_null($time) ) {
+    $time = time();
+  }
 
   if ( $seed = seed_load($sid, TRUE) ) {
     $account = user_load($seed->uid);
 
     if ( user_access('use seeds', $account) ) {
       $seed->used = TRUE;
-      $seed->used_timestamp = time();
+      $seed->used_timestamp = $time;
       $seed->used_token = seed_use_token($seed);
       seed_save($seed);
 
