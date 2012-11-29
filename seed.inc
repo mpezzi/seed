@@ -120,6 +120,7 @@ function seed_find($params = array()) {
     return FALSE;
   }
 
+  // @TODO: Perhaps this should run on cron?
   // 1. Cultivate (or clean) out any old or stale seeds.
   seed_cultivate($params['time']);
 
