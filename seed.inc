@@ -186,6 +186,33 @@ function seed_find($params = array()) {
 }
 
 /**
+ * Returns a seed held by a user.
+ */
+function seed_held($params = array()) {
+  $params += array(
+    'tid' => NULL,
+    'hold' => TRUE,
+    'time' => time(),
+    'account' => $GLOBALS['user'],
+  );
+
+  if ( is_null($params['account']) ) {
+    $params['account'] = $GLOBALS['user'];
+  }
+
+  // If account doesn't have access, stop now.
+  if ( !seed_find_access($params['account']) ) {
+    return FALSE;
+  }
+
+  // @TODO: Perhaps this should run on cron?
+  // 1. Cultivate (or clean) out any old or stale seeds.
+  seed_cultivate($params['time']);
+
+  return seed_find_held($params);
+}
+
+/**
  * Cultivate (or clean) expired seeds.
  */
 function seed_cultivate($time = NULL) {
