@@ -332,6 +332,7 @@ function seed_drop($sid = NULL) {
     if ( $seed->replant ) {
       $seed->status = 1;
       $seed->hold_timestamp = 0;
+      $seed->hold_timestamp_end = 0;
       $seed->uid = 0;
     }
     else {
