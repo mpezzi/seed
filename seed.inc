@@ -87,20 +87,6 @@ function seed_generate_random($params = array()) {
  * @return
  *   A seed object, or FALSE if the seed is not found.
  */
-function xseed_find($tid = NULL, $hold = TRUE, $account = NULL) {
-  //return seed_find_process(array('tid' => $tid, 'hold' => $hold, 'account' => $account));
-}
-
-/**
- * Find a seed.
- *
- * @param $tid
- *   A term id.
- * @param $hold
- *   Whether to hold the seed for the user.
- * @return
- *   A seed object, or FALSE if the seed is not found.
- */
 function seed_find($params = array()) {
   //dpm(__FUNCTION__);
 
