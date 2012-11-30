@@ -138,8 +138,8 @@ function drush_seed_generate_random($start, $end, $window = 86400) {
   $tid = drush_get_option('tid', NULL);
   $time = drush_get_option('time', time());
   $seed_life = drush_get_option('seed_life', 0);
-  $hold_life = drush_get_option('hold_life', 0);
-  $replant = drush_get_option('replant', 0);
+  $hold_life = drush_get_option('hold_life', 600);
+  $replant = drush_get_option('replant', 1);
   $status = drush_get_option('status', 1);
 
   if ( !is_numeric($start) ) {
