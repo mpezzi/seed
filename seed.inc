@@ -316,10 +316,17 @@ function seed_find_access($account) {
 /**
  * Drop a seed.
  */
-function seed_drop($sid) {
+function seed_drop($sid = NULL) {
   global $user;
 
-  if ( $seed = seed_load($sid, TRUE) ) {
+  if ( is_null($sid) ) {
+    $seed = seed_held();
+  }
+  else {
+    $seed = seed_load($sid, TRUE);
+  }
+
+  if ( $seed ) {
     $account = user_load($seed->uid);
 
     if ( $seed->replant ) {
