@@ -223,18 +223,28 @@ function seed_replant($time = NULL) {
     $time = time();
   }
 
-  $seeds_replanted = db_update('seed')
-    ->fields(array('status' => 1, 'uid' => 0, 'hold_timestamp' => 0, 'hold_timestamp_end' => 0))
+  $seeds = db_select('seed', 's')
+    ->fields('s', array())
     ->condition('hold_timestamp_end', $time, '<')
     ->condition('replant', 1)
     ->condition('used', 0)
     ->condition('status', 0)
-    ->execute();
+    ->execute()
+    ->fetchAll();
 
-  //dpm(__FUNCTION__, $seeds_replanted);
+  foreach ( $seeds as $seed ) {
+    // Invoke hook_seed_replant().
+    module_invoke_all('seed_replant', $seed);
 
-  if ( $seeds_replanted > 0 ) {
-    watchdog('seed', 'Replanted @seeds_replanted expired seeds.', array('@seeds_replanted' => $seeds_replanted), WATCHDOG_NOTICE);
+    $seed->status = 1;
+    $seed->uid = 0;
+    $seed->hold_timestamp = 0;
+    $seed->hold_timestamp_end = 0;
+    seed_save($seed);
+  }
+
+  if ( count($seeds) > 0 ) {
+    watchdog('seed', 'Replanted @seeds expired seeds.', array('@seeds' => count($seeds)), WATCHDOG_NOTICE);
   }
 }
 
@@ -246,18 +256,28 @@ function seed_pluck($time = NULL) {
     $time = time();
   }
 
-  $seeds_plucked = db_update('seed')
-    ->fields(array('status' => 0, 'uid' => 0, 'used' => 1, 'used_timestamp' => time()))
+  $seeds = db_select('seed', 's')
+    ->fields('s', array())
     ->condition('hold_timestamp_end', $time, '<')
     ->condition('replant', 0)
     ->condition('used', 0)
     ->condition('status', 0)
-    ->execute();
+    ->execute()
+    ->fetchAll();
 
-  //dpm(__FUNCTION__, $seeds_plucked);
+  foreach ( $seeds as $seed ) {
+    // Invoke hook_seed_pluck().
+    module_invoke_all('seed_pluck', $seed);
 
-  if ( $seeds_plucked > 0 ) {
-    watchdog('seed', 'Plucked @seeds_plucked expired seeds.', array('@seeds_plucked' => $seeds_plucked), WATCHDOG_NOTICE);
+    $seed->status = 0;
+    $seed->uid = 0;
+    $seed->used = 1;
+    $seed->used_timestamp = $time;
+    seed_save($seed);
+  }
+
+  if ( count($seeds) > 0 ) {
+    watchdog('seed', 'Plucked @seeds expired seeds.', array('@seeds' => count($seeds)), WATCHDOG_NOTICE);
   }
 }
 
