@@ -31,15 +31,6 @@ function seed_menu() {
       'file' => 'seed.admin.inc',
       'type' => MENU_NORMAL_ITEM,
     ),
-    // 'admin/reports/seeds' => array(
-    //   'title' => 'Seed status',
-    //   'description' => 'View current seed status',
-    //   'page callback' => 'drupal_get_form',
-    //   'page arguments' => array('seed_list'),
-    //   'access arguments' => array('view seed reports'),
-    //   'file' => 'seed.pages.inc',
-    //   'type' => MENU_NORMAL_ITEM,
-    // ),
   );
 }
 
