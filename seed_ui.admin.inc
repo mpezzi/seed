@@ -249,6 +249,33 @@ function seed_ui_form_seed_submit($form, &$form_state) {
 }
 
 /**
+ * Seed Delete Form.
+ */
+function seed_ui_form_seed_delete($form, &$form_state, $seed) {
+  return confirm_form(
+    array(
+      'seed' => array(
+        '#type' => 'value',
+        '#value' => $seed,
+      ),
+    ),
+    t('Are you sure you want to delete this seed %name?', array('%name' => $seed->name)),
+    'admin/structure/seed',
+    t('This action cannot be undone.'),
+    t('Delete collection'),
+    t('Cancel')
+  );
+}
+
+/**
+ * Submit Handler: Seed Delete Form.
+ */
+function seed_ui_form_seed_delete_submit($form, &$form_state) {
+  seed_delete($form_state['values']['seed']->sid);
+  $form_state['redirect'] = 'admin/structure/seed';
+}
+
+/**
  * Title callback for seed pages.
  *
  * @param $seed

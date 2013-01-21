@@ -66,6 +66,15 @@ function seed_ui_menu() {
     'weight' => 10,
     'file' => 'seed_ui.admin.inc',
   );
+  $items['seed/%seed/delete'] = array(
+    'title' => 'Delete',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('seed_ui_form_seed_delete', 1, NULL),
+    'access arguments' => array('administer seeds'),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 10,
+    'file' => 'seed_ui.admin.inc',
+  );
   
   return $items;
 }
