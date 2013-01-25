@@ -328,8 +328,10 @@ function seed_find_access($account) {
   }
 
   // Invoke hook_seed_find_access() to allow other modules to adjust find access.
-  foreach ( module_implements('seed_find_access') as $module ) {
-    $access = call_user_func($module . '_seed_find_access', $account);
+  if ( $access ) {
+    foreach ( module_implements('seed_find_access') as $module ) {
+      $access = call_user_func($module . '_seed_find_access', $account);
+    }
   }
 
   return $access;
