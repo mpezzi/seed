@@ -88,8 +88,6 @@ function seed_generate_random($params = array()) {
  *   A seed object, or FALSE if the seed is not found.
  */
 function seed_find($params = array()) {
-  //dpm(__FUNCTION__);
-
   $params += array(
     'tid' => NULL,
     'hold' => TRUE,
@@ -202,8 +200,6 @@ function seed_held($params = array()) {
  * Cultivate (or clean) expired seeds.
  */
 function seed_cultivate($time = NULL) {
-  //dpm(__FUNCTION__);
-
   // Replant held seeds that have expired.
   if ( variable_get('seed_replant', TRUE) ) {
     seed_replant($time);
@@ -290,8 +286,6 @@ function seed_pluck($time = NULL) {
  *   TRUE if a seed is found, FALSE otherwise.
  */
 function seed_find_held($params) {
-  //dpm(__FUNCTION__);
-
   $query = db_select('seed', 's')
     ->fields('s', array())
     ->condition('s.uid', $params['account']->uid)
