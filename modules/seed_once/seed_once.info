@@ -1,5 +1,6 @@
 name = Seed Once
 description = Provides functionality to restrict users from finding more than one seed.
+package = Seed
 core = 7.x
 
 dependencies[] = seed
