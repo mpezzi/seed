@@ -312,19 +312,27 @@ function seed_find_held($params) {
  *   TRUE if the account has access, otherwise FALSE
  */
 function seed_find_access($account) {
+  // Default to TRUE, all checks should be to see if the user does not have access.
+  $access = TRUE;
+
   // Ensure user account has permission to use seeds.
   if ( !user_access('use seeds', $account) ) {
-    return FALSE;
+    $access = FALSE;
   }
 
   // Does the user have a role that is to be ignored?
   foreach ( variable_get('seed_ignored_roles', array()) as $id ) {
     if ( $id != 0 && array_key_exists($id, $account->roles) ) {
-      return FALSE;
+      $access = FALSE;
     }
   }
 
-  return TRUE;
+  // Invoke hook_seed_find_access() to allow other modules to adjust find access.
+  foreach ( module_implements('seed_find_access') as $module ) {
+    $access = call_user_func($module . '_seed_find_access', $account);
+  }
+
+  return $access;
 }
 
 /**

@@ -1,0 +1,24 @@
+<?php
+
+/**
+ * @file
+ * Provides functionality to restrict users from finding more than one seed.
+ */
+
+/**
+ * Implements hook_seed_find_access().
+ */
+function seed_once_seed_find_access($account) {
+  // Look used seed from this user.
+  // @TODO: allow for checking on different categories, etc.
+  $seed = db_select('seed', 's')
+    ->fields('s', array())
+    ->condition('s.uid', $account->uid)
+    ->condition('s.used', 1)
+    ->condition('s.status', 0)
+    ->range(0, 1)
+    ->execute();
+
+  // If a seed is found, return FALSE to prevent user from finding another.
+  return $seed ? FALSE : TRUE;
+}
