@@ -17,7 +17,8 @@ function seed_once_seed_find_access($account) {
     ->condition('s.used', 1)
     ->condition('s.status', 0)
     ->range(0, 1)
-    ->execute();
+    ->execute()
+    ->fetchObject();
 
   // If a seed is found, return FALSE to prevent user from finding another.
   return $seed ? FALSE : TRUE;
