@@ -252,6 +252,33 @@ function seed_pluck($time = NULL) {
     $time = time();
   }
 
+  // Pluck expired seeds.
+  $seeds = db_select('seed', 's')
+    ->fields('s', array())
+    ->condition('seed_timestamp_end', 0, '<>')
+    ->condition('seed_timestamp_end', $time, '<')
+    ->condition('replant', 0)
+    ->condition('used', 0)
+    ->condition('status', 1)
+    ->execute()
+    ->fetchAll();
+
+  foreach ( $seeds as $seed ) {
+    // Invoke hook_seed_pluck().
+    module_invoke_all('seed_pluck', $seed);
+
+    $seed->status = 0;
+    $seed->uid = 0;
+    $seed->used = 1;
+    $seed->used_timestamp = $time;
+    seed_save($seed);
+  }
+
+  if ( count($seeds) > 0 ) {
+    watchdog('seed', 'Plucked @seeds expired seeds.', array('@seeds' => count($seeds)), WATCHDOG_NOTICE);
+  }
+
+  // Pluck expired held seeds.
   $seeds = db_select('seed', 's')
     ->fields('s', array())
     ->condition('hold_timestamp_end', $time, '<')
@@ -273,7 +300,7 @@ function seed_pluck($time = NULL) {
   }
 
   if ( count($seeds) > 0 ) {
-    watchdog('seed', 'Plucked @seeds expired seeds.', array('@seeds' => count($seeds)), WATCHDOG_NOTICE);
+    watchdog('seed', 'Plucked @seeds expired held seeds.', array('@seeds' => count($seeds)), WATCHDOG_NOTICE);
   }
 }
 
