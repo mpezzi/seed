@@ -18,7 +18,7 @@ This is handy when building "we're giving away *n* amount of prizes" type sites.
 * Basic services integration with the seed_service module.
 * Supports time limited seeds.
 * Supports expirations on found seeds.
-* Supports re-cultivation of seeds so they can be found again, or they can be removed from circulation after dropping.
+* Supports replanting of seeds so they can be found again, or they can be removed from circulation after dropping.
 * Supports use of taxonomy to categories seeds.
 
 ## Note:
