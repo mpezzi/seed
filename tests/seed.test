@@ -39,7 +39,7 @@ class SeedTestCase extends DrupalWebTestCase {
   function createSeedReplantable($num_seeds = 10, $offset = 0, $time_apart = 20, $tid = NULL) {
     // Create seeds a set amount appart.
     for ( $i = 0; $i < $num_seeds; $i++ ) {
-      $seed = (object) array(
+      $data = (object) array(
         'tid' => $tid,
         'name' => 'seedtest' . '_' . ( $i + 1 ),
         'seed_timestamp' => ( $i * $time_apart ) + $offset,
@@ -48,7 +48,8 @@ class SeedTestCase extends DrupalWebTestCase {
         'replant' => TRUE,
         'status' => TRUE,
       );
-      seed_save($seed);
+      $seed = new Seed($data);
+      $seed->save();
     }
   }
 
@@ -67,7 +68,7 @@ class SeedTestCase extends DrupalWebTestCase {
   function createSeedReplantableWithLimit($num_seeds = 10, $offset = 0, $time_apart = 20, $tid = NULL) {
     // Create seeds a set amount appart.
     for ( $i = 0; $i < $num_seeds; $i++ ) {
-      $seed = (object) array(
+      $data = (object) array(
         'tid' => $tid,
         'name' => 'seedtest' . '_' . ( $i + 1 ),
         'seed_timestamp' => ( $i * $time_apart ) + $offset,
@@ -76,7 +77,8 @@ class SeedTestCase extends DrupalWebTestCase {
         'replant' => TRUE,
         'status' => TRUE,
       );
-      seed_save($seed);
+      $seed = new Seed($data);
+      $seed->save();
     }
   }
 
@@ -95,7 +97,7 @@ class SeedTestCase extends DrupalWebTestCase {
   function createSeedNonReplantable($num_seeds = 10, $offset = 0, $time_apart = 20, $tid = NULL) {
     // Create seeds a set amount appart.
     for ( $i = 0; $i < $num_seeds; $i++ ) {
-      $seed = (object) array(
+      $data = (object) array(
         'tid' => $tid,
         'name' => 'seedtest' . '_' . ( $i + 1 ),
         'seed_timestamp' => ( $i * $time_apart ) + $offset,
@@ -104,7 +106,8 @@ class SeedTestCase extends DrupalWebTestCase {
         'replant' => FALSE,
         'status' => TRUE,
       );
-      seed_save($seed);
+      $seed = new Seed($data);
+      $seed->save();
     }
   }
 }
@@ -131,71 +134,72 @@ class SeedAPITestCase extends SeedTestCase {
   }
 
   /**
-   * Call seed_save() and seed_load().
+   * Call saving and loading.
    */
   function testSeedStorage() {
     $this->drupalLogin($this->authenticated_user);
 
     // Save and load a seed object, and ensure it matches what's stored in the database.
-    $seed = (object) array(
+    $data = (object) array(
       'seed_timestamp' => time(),
       'name' => 'test1',
       'status' => 1,
     );
+    $seed = new Seed($data);
+    $seed->save();
 
-    seed_save($seed);
-    $seed = seed_load($seed->sid);
+    $seed1 = SeedAPI::load($seed->sid);
 
     // Ensure seed object matches that which was saved and loaded using seed_save() and seed_load().
-    $this->assertTrue($seed == $this->getSeed($seed->sid), t('Seed successfully stored in database.'));
+    $this->assertTrue($seed1->getData() == $this->getSeed($seed->sid), t('Seed successfully stored in database.'));
   }
 
   /**
-   * Test seed_find() with replantable seeds.
+   * Test find with replantable seeds.
    */
   function testSeedFindReplantable() {
     $this->drupalLogin($this->authenticated_user);
     $this->createSeedReplantable(10, 0, 20, NULL);
 
     // Look for the first seed (existing).
-    $seed_1 = seed_find(array('time' => 5, 'account' => $this->authenticated_user));
+    $seed_1 = SeedAPI::find(array('time' => 5, 'account' => $this->authenticated_user));
     $this->assertTrue($seed_1 !== FALSE, t('First seed was found.'));
 
     // Look for the first seed again (held).
-    $seed_2 = seed_find(array('time' => 6, 'account' => $this->authenticated_user));
+    $seed_2 = SeedAPI::find(array('time' => 6, 'account' => $this->authenticated_user));
     $this->assertTrue($seed_2 !== FALSE && $seed_2->sid == $seed_1->sid, t('First held seed was found.'));
 
     // Look for the first seed (existing, replanted).
-    $seed_3 = seed_find(array('time' => 16, 'account' => $this->authenticated_user));
+    $seed_3 = SeedAPI::find(array('time' => 16, 'account' => $this->authenticated_user));
     $this->assertTrue($seed_3 !== FALSE && $seed_3->sid == $seed_1->sid, t('First seed was replanted and found again.'));
   }
 
   /**
-   * Test seed_find() with replantable seeds with multiple users.
+   * Test find with replantable seeds with multiple users.
    */
   function testSeedFindReplantableMultiUser() {
     $this->drupalLogin($this->authenticated_user);
     $this->createSeedReplantable(10, 0, 20, NULL);
 
     // First user looks for the first seed (existing).
-    $seed_1 = seed_find(array('time' => 5, 'account' => $this->authenticated_user));
+    $seed_1 = SeedAPI::find(array('time' => 5, 'account' => $this->authenticated_user));
     $this->assertTrue($seed_1 !== FALSE, t('First user first seed was found.'));
 
     // First user looks for the first seed (held).
-    $seed_2 = seed_find(array('time' => 6, 'account' => $this->authenticated_user));
+    $seed_2 = SeedAPI::find(array('time' => 6, 'account' => $this->authenticated_user));
     $this->assertTrue($seed_2 !== FALSE && $seed_2->sid == $seed_1->sid, t('First user held seed was found.'));
 
     // Second user looks for the first seed (held).
-    $seed_3 = seed_find(array('time' => 7, 'account' => $this->authenticated_user2));
+    $seed_3 = SeedAPI::find(array('time' => 7, 'account' => $this->authenticated_user2));
     $this->assertTrue($seed_3 === FALSE, t('Second user first held seed was not found.'));
 
     // Second user looks for the first seed replanted (exisiting).
-    $seed_4 = seed_find(array('time' => 16, 'account' => $this->authenticated_user2));
+    $seed_4 = SeedAPI::find(array('time' => 16, 'account' => $this->authenticated_user2));
     $this->assertTrue($seed_4 !== FALSE && $seed_4->sid == $seed_1->sid, t('Second user found first replanted seed.'));
   }
 
   /**
-   * Test seed_find() with replantable seeds.
+   * Test find with replantable seeds.
    */
   function testSeedFindReplantableMultiUserWithTerm() {
     $this->drupalLogin($this->authenticated_user);
@@ -203,132 +207,136 @@ class SeedAPITestCase extends SeedTestCase {
     $this->createSeedReplantable(10, 0, 20, 2);
 
     // First user looks for the first seed with first term (existing).
-    $seed_1 = seed_find(array('time' => 5, 'tid' => 1, 'account' => $this->authenticated_user));
+    $seed_1 = SeedAPI::find(array('time' => 5, 'tid' => 1, 'account' => $this->authenticated_user));
     $this->assertTrue($seed_1 !== FALSE, t('First seed with first term was found.'));
 
     // First user looks for the first seed again (held).
-    $seed_2 = seed_find(array('time' => 6, 'tid' => 1,'account' => $this->authenticated_user));
+    $seed_2 = SeedAPI::find(array('time' => 6, 'tid' => 1,'account' => $this->authenticated_user));
     $this->assertTrue($seed_2 !== FALSE && $seed_2->sid == $seed_1->sid, t('First held seed with first term was found.'));
 
     // Second user looks the the first seed with first term (held by first user).
-    $seed_3 = seed_find(array('time' => 7, 'tid' => 1, 'account' => $this->authenticated_user2));
+    $seed_3 = SeedAPI::find(array('time' => 7, 'tid' => 1, 'account' => $this->authenticated_user2));
     $this->assertTrue($seed_3 === FALSE, t('Second user did not find first term seed.'));
 
     // Second user looks for the first seed with second term (existing).
-    $seed_4 = seed_find(array('time' => 8, 'tid' => 2, 'account' => $this->authenticated_user2));
+    $seed_4 = SeedAPI::find(array('time' => 8, 'tid' => 2, 'account' => $this->authenticated_user2));
     $this->assertTrue($seed_4 !== FALSE && $seed_4->sid != $seed_1->sid, t('Second user found second term seed and it was not the first seed.'));
   }
 
   /**
-   * Test seed_find() with replantable seeds with limits.
+   * Test find with replantable seeds with limits.
    */
   function testSeedFindReplantableWithLimit() {
     $this->drupalLogin($this->authenticated_user);
     $this->createSeedReplantableWithLimit(10, 0, 20, NULL);
 
     // Look for the first seed (existing).
-    $seed_1 = seed_find(array('time' => 5, 'account' => $this->authenticated_user));
+    $seed_1 = SeedAPI::find(array('time' => 5, 'account' => $this->authenticated_user));
     $this->assertTrue($seed_1 !== FALSE, t('First seed was found.'));
 
     // Look for the first seed again (existing).
-    $seed_2 = seed_find(array('time' => 6, 'account' => $this->authenticated_user));
+    $seed_2 = SeedAPI::find(array('time' => 6, 'account' => $this->authenticated_user));
     $this->assertTrue($seed_2 !== FALSE && $seed_2->sid == $seed_1->sid, t('First seed was found again.'));
 
     // Look for the second seed (non-existing, too early).
-    $seed_3 = seed_find(array('time' => 16, 'account' => $this->authenticated_user));
+    $seed_3 = SeedAPI::find(array('time' => 16, 'account' => $this->authenticated_user));
     $this->assertTrue($seed_3 === FALSE, t('First seed was not found again.'));
   }
 
   /**
-   * Test seed_find() with non replantable seeds with limits.
+   * Test find with non replantable seeds with limits.
    */
   function testSeedFindNonReplantable() {
     $this->drupalLogin($this->authenticated_user);
     $this->createSeedNonReplantable(10, 0, 20, NULL);
 
     // Look for the first seed (existing).
-    $seed_1 = seed_find(array('time' => 5, 'account' => $this->authenticated_user));
+    $seed_1 = SeedAPI::find(array('time' => 5, 'account' => $this->authenticated_user));
     $this->assertTrue($seed_1 !== FALSE, t('First seed was found.'));
 
     // Look for the first seed again (held).
-    $seed_2 = seed_find(array('time' => 6, 'account' => $this->authenticated_user));
+    $seed_2 = SeedAPI::find(array('time' => 6, 'account' => $this->authenticated_user));
     $this->assertTrue($seed_2 !== FALSE && $seed_2->sid == $seed_1->sid, t('First seed was found again.'));
 
     // Look for the second seed (non-existing, too early).
-    $seed_3 = seed_find(array('time' => 16, 'account' => $this->authenticated_user));
+    $seed_3 = SeedAPI::find(array('time' => 16, 'account' => $this->authenticated_user));
     $this->assertTrue($seed_3 === FALSE, t('Second seed was not found.'));
 
     // Look for the second seed (existing).
-    $seed_4 = seed_find(array('time' => 25, 'account' => $this->authenticated_user));
+    $seed_4 = SeedAPI::find(array('time' => 25, 'account' => $this->authenticated_user));
     $this->assertTrue($seed_4 !== FALSE, t('Second seed was found.'));
     $this->assertTrue($seed_4 !== FALSE && $seed_4->sid !== $seed_1->sid, t('Second seed was found is different from first seed.'));
   }
 
   /**
-   * Test seed_find() with non replantable seeds with limits.
+   * Test find with non replantable seeds with limits.
    */
   function testSeedFindNonReplantableMultiUser() {
     $this->drupalLogin($this->authenticated_user);
     $this->createSeedNonReplantable(10, 0, 20, NULL);
 
     // First user looks for the first seed (existing).
-    $seed_1 = seed_find(array('time' => 5, 'account' => $this->authenticated_user));
+    $seed_1 = SeedAPI::find(array('time' => 5, 'account' => $this->authenticated_user));
     $this->assertTrue($seed_1 !== FALSE, t('First user first seed was found.'));
 
     // First user looks for the first seed again (held).
-    $seed_2 = seed_find(array('time' => 6, 'account' => $this->authenticated_user));
+    $seed_2 = SeedAPI::find(array('time' => 6, 'account' => $this->authenticated_user));
     $this->assertTrue($seed_2 !== FALSE && $seed_2->sid == $seed_1->sid, t('First user held seed was found.'));
 
     // Second user looks for the first seed (held).
-    $seed_3 = seed_find(array('time' => 7, 'account' => $this->authenticated_user2));
+    $seed_3 = SeedAPI::find(array('time' => 7, 'account' => $this->authenticated_user2));
     $this->assertTrue($seed_3 === FALSE, t('Second user first held seed was not found.'));
 
     // First user looks for expired seed (expired).
-    $seed_4 = seed_find(array('time' => 16, 'account' => $this->authenticated_user));
+    $seed_4 = SeedAPI::find(array('time' => 16, 'account' => $this->authenticated_user));
     $this->assertTrue($seed_4 === FALSE, t('First user first expired seed was not found.'));
 
     // Second user looks for a new seed (exisiting).
-    $seed_5 = seed_find(array('time' => 25, 'account' => $this->authenticated_user2));
+    $seed_5 = SeedAPI::find(array('time' => 25, 'account' => $this->authenticated_user2));
     $this->assertTrue($seed_5 !== FALSE, t('Second user second seed was found.'));
     $this->assertTrue($seed_5 !== FALSE && $seed_5->sid !== $seed_1->sid, t('Second user second seed was found is different from first seed.'));
   }
 
   /**
-   * Test seed_use() with replantable seeds.
+   * Test consume with replantable seeds.
    */
-  function testSeedUseReplantable() {
+  function testSeedConsumeReplantable() {
     $this->drupalLogin($this->authenticated_user);
     $this->createSeedReplantable(10, 0, 20, NULL);
 
     // First user looks for the first seed (existing).
-    $seed_1 = seed_find(array('time' => 5, 'account' => $this->authenticated_user));
+    $seed_1 = SeedAPI::find(array('time' => 5, 'account' => $this->authenticated_user));
     $this->assertTrue($seed_1 !== FALSE, t('First user first seed was found.'));
 
     // First user uses the first seed (held).
-    $seed_2 = seed_use($seed_1->sid);
+    // @todo refactor this to new method.
+    $seed_1->consume();
+    $seed_2 = $seed_1;
     $this->assertTrue($seed_2 !== FALSE && $seed_2->sid == $seed_1->sid, t('First user used first seed.'));
     $this->assertTrue($seed_2 !== FALSE && $seed_2->used == TRUE, t('First user used first seed was marked as used.'));
     $this->assertTrue($seed_2 !== FALSE && $seed_2->used_timestamp !== 0, t('First user used first seed was set a used timestamp.'));
-    $this->assertTrue($seed_2 !== FALSE && !empty($seed_2->used_token), t('First user used first seed token generated (!token).', array('!token' => $seed_2->used_token)));
+    $this->assertTrue($seed_2 !== FALSE && $seed_2->used_token, t('First user used first seed token generated (!token).', array('!token' => $seed_2->used_token)));
   }
 
   /**
-   * Test seed_drop() with replantable seeds.
+   * Test drop with replantable seeds.
    */
   function testSeedDropReplantable() {
     $this->drupalLogin($this->authenticated_user);
     $this->createSeedReplantable(10, 0, 20, NULL);
 
     // First user looks for the first seed (existing).
-    $seed_1 = seed_find(array('time' => 5, 'account' => $this->authenticated_user));
+    $seed_1 = SeedAPI::find(array('time' => 5, 'account' => $this->authenticated_user));
     $this->assertTrue($seed_1 !== FALSE, t('First user first seed was found.'));
 
     // Second user looks for the first seed (held).
-    $seed_2 = seed_find(array('time' => 6, 'account' => $this->authenticated_user2));
+    $seed_2 = SeedAPI::find(array('time' => 6, 'account' => $this->authenticated_user2));
     $this->assertTrue($seed_2 === FALSE, t('Second user first held seed was not found.'));
 
     // First user drops first seed (drop).
-    $seed_3 = seed_drop($seed_1->sid);
+    // @todo refactor this to new method.
+    $seed_1->drop();
+    $seed_3 = $seed_1;
     $this->assertTrue($seed_3 !== FALSE && $seed_3->sid == $seed_1->sid, t('First user drops first seed.'));
     $this->assertTrue($seed_3 !== FALSE && $seed_3->uid == 0, t('Dropped seed is not assigned to a user.'));
     $this->assertTrue($seed_3 !== FALSE && $seed_3->hold_timestamp == 0, t('Dropped seed has no hold timestamp.'));
@@ -336,34 +344,36 @@ class SeedAPITestCase extends SeedTestCase {
     $this->assertTrue($seed_3 !== FALSE && $seed_3->used == FALSE, t('Dropped seed is marked as not being used.'));
 
     // Second user can pickup first replanted seed (existing).
-    $seed_4 = seed_find(array('time' => 7, 'account' => $this->authenticated_user2));
+    $seed_4 = SeedAPI::find(array('time' => 7, 'account' => $this->authenticated_user2));
     $this->assertTrue($seed_4 !== FALSE && $seed_4->sid == $seed_1->sid, t('Second user finds first replanted seed.'));
   }
 
   /**
-   * Test seed_drop() with non replantable seeds.
+   * Test drop with non replantable seeds.
    */
   function testSeedDropNonReplantable() {
     $this->drupalLogin($this->authenticated_user);
     $this->createSeedNonReplantable(10, 0, 20, NULL);
 
     // First user looks for the first seed (existing).
-    $seed_1 = seed_find(array('time' => 5, 'account' => $this->authenticated_user));
+    $seed_1 = SeedAPI::find(array('time' => 5, 'account' => $this->authenticated_user));
     $this->assertTrue($seed_1 !== FALSE, t('First user first seed was found.'));
 
     // Second user looks for the first seed (held).
-    $seed_2 = seed_find(array('time' => 6, 'account' => $this->authenticated_user2));
+    $seed_2 = SeedAPI::find(array('time' => 6, 'account' => $this->authenticated_user2));
     $this->assertTrue($seed_2 === FALSE, t('Second user first held seed was not found.'));
 
     // First user drops first seed (drop).
-    $seed_3 = seed_drop($seed_1->sid);
+    // @todo refactor this to new method.
+    $seed_1->drop();
+    $seed_3 = $seed_1;
     $this->assertTrue($seed_3 !== FALSE && $seed_3->sid == $seed_1->sid, t('First user drops first seed.'));
     $this->assertTrue($seed_3 !== FALSE && $seed_3->uid == 0, t('Dropped seed is not assigned to a user.'));
     $this->assertTrue($seed_3 !== FALSE && $seed_3->status == FALSE, t('Dropped seed is cannot be found again.'));
     $this->assertTrue($seed_3 !== FALSE && $seed_3->used == FALSE, t('Dropped seed is marked as not being used.'));
 
     // Second user can not pickup first dropped seed (non-existing).
-    $seed_4 = seed_find(array('time' => 7, 'account' => $this->authenticated_user2));
+    $seed_4 = SeedAPI::find(array('time' => 7, 'account' => $this->authenticated_user2));
     $this->assertTrue($seed_4 === FALSE, t('Second user does not find first dropped seed.'));
   }
 }

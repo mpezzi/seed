@@ -3,5 +3,8 @@ description = Provides seeding functionality for modules.
 package = Seed
 core = 7.x
 
+files[] = includes/Seed.inc
+files[] = includes/SeedAPI.inc
+
 files[] = seed.views.inc
 files[] = tests/seed.test

@@ -83,7 +83,7 @@ class SeedServiceTestCase extends ServicesWebTestCase {
   function createSeedReplantable($num_seeds = 10, $offset = 0, $time_apart = 20, $tid = NULL) {
     // Create seeds a set amount appart.
     for ( $i = 0; $i < $num_seeds; $i++ ) {
-      $seed = (object) array(
+      $data = (object) array(
         'tid' => $tid,
         'name' => 'seedtest' . '_' . ( $i + 1 ),
         'seed_timestamp' => ( $i * $time_apart ) + $offset,
@@ -92,7 +92,8 @@ class SeedServiceTestCase extends ServicesWebTestCase {
         'replant' => TRUE,
         'status' => TRUE,
       );
-      seed_save($seed);
+      $seed = new Seed($data);
+      $seed->save();
     }
   }
 
@@ -111,7 +112,7 @@ class SeedServiceTestCase extends ServicesWebTestCase {
   function createSeedReplantableWithLimit($num_seeds = 10, $offset = 0, $time_apart = 20, $tid = NULL) {
     // Create seeds a set amount appart.
     for ( $i = 0; $i < $num_seeds; $i++ ) {
-      $seed = (object) array(
+      $data = (object) array(
         'tid' => $tid,
         'name' => 'seedtest' . '_' . ( $i + 1 ),
         'seed_timestamp' => ( $i * $time_apart ) + $offset,
@@ -120,7 +121,8 @@ class SeedServiceTestCase extends ServicesWebTestCase {
         'replant' => TRUE,
         'status' => TRUE,
       );
-      seed_save($seed);
+      $seed = new Seed($data);
+      $seed->save();
     }
   }
 
@@ -139,7 +141,7 @@ class SeedServiceTestCase extends ServicesWebTestCase {
   function createSeedNonReplantable($num_seeds = 10, $offset = 0, $time_apart = 20, $tid = NULL) {
     // Create seeds a set amount appart.
     for ( $i = 0; $i < $num_seeds; $i++ ) {
-      $seed = (object) array(
+      $data = (object) array(
         'tid' => $tid,
         'name' => 'seedtest' . '_' . ( $i + 1 ),
         'seed_timestamp' => ( $i * $time_apart ) + $offset,
@@ -148,7 +150,8 @@ class SeedServiceTestCase extends ServicesWebTestCase {
         'replant' => FALSE,
         'status' => TRUE,
       );
-      seed_save($seed);
+      $seed = new Seed($data);
+      $seed->save();
     }
   }
 
@@ -160,7 +163,7 @@ class SeedServiceTestCase extends ServicesWebTestCase {
     $this->createSeedReplantable(10, 0, 20, NULL);
 
     $result = $this->servicesPost($this->endpoint->path . '/seed/find', array());
-    $seed_1 = seed_load($result['body']->sid);
+    $seed_1 = SeedAPI::load($result['body']->sid);
     $this->assertTrue($result['body']->sid == $seed_1->sid, t('Seed find result matches seed.'));
   }
 
